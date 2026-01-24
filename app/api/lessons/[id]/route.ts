@@ -6,7 +6,14 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
+
+        if (!id) {
+            return NextResponse.json(
+                { error: "Invalid ID" },
+                { status: 400 }
+            );
+        }
 
         const { data: lesson, error: lessonError } = await supabase
             .from("lessons")

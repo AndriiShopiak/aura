@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Save, ArrowLeft, Lock, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Save, ArrowLeft, Lock, Loader2, Sparkles, AlertCircle, LayoutDashboard, KeyRound, Type, AlignLeft, Info } from "lucide-react";
 import Link from "next/link";
 import { Word } from "@/types";
 
@@ -20,7 +20,6 @@ export default function AdminPage() {
         { value: "", word: "", alts: [] }
     ]);
 
-    // Handle Auth (Simple for now)
     const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
         if (adminKey.trim().length > 0) {
@@ -31,14 +30,8 @@ export default function AdminPage() {
         }
     };
 
-    const addWord = () => {
-        setWords([...words, { value: "", word: "", alts: [] }]);
-    };
-
-    const removeWord = (index: number) => {
-        setWords(words.filter((_, i) => i !== index));
-    };
-
+    const addWord = () => setWords([...words, { value: "", word: "", alts: [] }]);
+    const removeWord = (index: number) => setWords(words.filter((_, i) => i !== index));
     const updateWord = (index: number, field: keyof Word, val: any) => {
         const newWords = [...words];
         newWords[index] = { ...newWords[index], [field]: val };
@@ -56,13 +49,7 @@ export default function AdminPage() {
             const res = await fetch("/api/lessons", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title,
-                    description,
-                    icon,
-                    words,
-                    adminKey
-                })
+                body: JSON.stringify({ title, description, icon, words, adminKey })
             });
 
             const data = await res.json();
@@ -73,7 +60,6 @@ export default function AdminPage() {
                 setError(data.error || "Failed to save lesson");
             }
         } catch (err) {
-            console.error("Save error:", err);
             setError("A connection error occurred.");
         } finally {
             setIsSaving(false);
@@ -82,36 +68,37 @@ export default function AdminPage() {
 
     if (!isAuthorized) {
         return (
-            <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 selection:bg-sky-100 selection:text-sky-900">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-md bg-white p-8 rounded-4xl border border-neutral-200 shadow-xl text-center"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full max-w-md bg-white p-12 rounded-4xl aura-card shadow-2xl text-center border-white relative overflow-hidden"
                 >
-                    <div className="w-16 h-16 bg-neutral-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-neutral-400">
-                        <Lock size={32} />
+                    <div className="absolute top-0 left-0 w-full h-2 aura-gradient-primary" />
+                    <div className="w-20 h-20 aura-gradient-primary rounded-4xl flex items-center justify-center mx-auto mb-10 text-white aura-logo-shadow">
+                        <KeyRound size={36} />
                     </div>
-                    <h1 className="text-2xl font-black text-neutral-800 mb-2">Admin Access</h1>
-                    <p className="text-neutral-400 text-sm mb-8">Enter your secret key to manage Aura lessons.</p>
+                    <h1 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Tutor Console</h1>
+                    <p className="text-slate-500 font-medium mb-10">Enter your developer access key to manage lessons.</p>
 
-                    <form onSubmit={handleAuth} className="space-y-4">
-                        <div>
+                    <form onSubmit={handleAuth} className="space-y-6">
+                        <div className="relative group">
                             <input
                                 type="password"
-                                placeholder="Enter Secret Key"
+                                placeholder="Access Key"
                                 value={adminKey}
                                 onChange={(e) => setAdminKey(e.target.value)}
-                                className="w-full h-14 bg-neutral-50 border border-neutral-200 rounded-2xl px-6 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-center font-mono tracking-widest text-neutral-900"
+                                className="w-full h-16 bg-slate-50 border border-slate-200 rounded-2xl px-6 focus:outline-none focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all text-center font-mono font-bold tracking-widest text-slate-900"
                             />
-                            {error && <p className="text-rose-500 text-xs mt-2 font-bold uppercase tracking-tight">{error}</p>}
+                            {error && <p className="text-rose-500 text-[10px] mt-3 font-black uppercase tracking-widest">{error}</p>}
                         </div>
-                        <button className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]">
-                            Unlock Dashboard
+                        <button className="w-full h-16 aura-gradient-primary hover:opacity-90 text-white rounded-2xl font-black shadow-xl shadow-sky-200 transition-all active:scale-[0.98]">
+                            Authenticate Access
                         </button>
                     </form>
 
-                    <Link href="/" className="inline-flex items-center gap-2 text-neutral-400 text-sm mt-8 hover:text-neutral-600 transition-colors">
-                        <ArrowLeft size={14} /> Back to Student View
+                    <Link href="/" className="inline-flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest mt-12 hover:text-sky-600 transition-colors group">
+                        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
                     </Link>
                 </motion.div>
             </div>
@@ -119,122 +106,129 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-50 p-6 md:p-12">
-            <div className="max-w-4xl mx-auto">
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
-                    <div>
-                        <Link href="/" className="inline-flex items-center gap-1 text-neutral-400 hover:text-neutral-600 transition-colors mb-2 text-sm font-bold uppercase tracking-wider">
-                            <ArrowLeft size={14} /> Dashboard
-                        </Link>
-                        <h1 className="text-3xl font-black text-neutral-800">Create New Lesson</h1>
-                    </div>
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-neutral-200 text-white rounded-2xl font-black shadow-lg shadow-emerald-100 transition-all active:scale-95"
-                    >
-                        {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                        {isSaving ? "Saving..." : "Publish Lesson"}
-                    </button>
-                </header>
+        <div className="min-h-screen bg-slate-50 pb-24 selection:bg-sky-100 selection:text-sky-900">
+            {/* Admin Header */}
+            <div className="aura-gradient-primary text-white py-12 mb-12">
+                <div className="max-w-6xl mx-auto px-6">
+                    <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                        <div>
+                            <Link href="/" className="inline-flex items-center gap-2 text-sky-100/70 hover:text-white transition-colors mb-4 text-[10px] font-black uppercase tracking-[0.2em] group">
+                                <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Exit Tutor Console
+                            </Link>
+                            <h1 className="text-4xl font-black tracking-tight leading-none">Lesson Architect</h1>
+                        </div>
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="flex items-center gap-3 px-10 py-5 bg-white text-sky-600 hover:bg-sky-50 disabled:bg-white/20 rounded-2xl font-black shadow-2xl aura-logo-shadow transition-all active:scale-95 whitespace-nowrap"
+                        >
+                            {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                            {isSaving ? "Publishing..." : "Finalize & Publish"}
+                        </button>
+                    </header>
+                </div>
+            </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Info */}
-                    <section className="lg:col-span-1 space-y-6">
-                        <div className="bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm space-y-4">
-                            <h2 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-4 flex items-center gap-2">
-                                <Sparkles size={14} className="text-amber-400" /> Basic Information
+            <div className="max-w-6xl mx-auto px-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    {/* Sidebar Configuration */}
+                    <section className="lg:col-span-1 space-y-8">
+                        <div className="bg-white p-8 rounded-4xl aura-card border-white/50 space-y-8">
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-4 flex items-center gap-2">
+                                <Sparkles size={16} className="text-amber-400" /> Module Configuration
                             </h2>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-neutral-700">Lesson Title</label>
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black text-slate-600 uppercase tracking-widest"><Type size={14} /> Module Title</label>
                                 <input
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="e.g. Farm Animals"
-                                    className="w-full h-12 bg-neutral-50 border border-neutral-200 rounded-xl px-4 focus:outline-none focus:border-indigo-500 transition-all text-neutral-900 font-medium"
+                                    placeholder="e.g. Daily Greeting"
+                                    className="w-full h-14 bg-slate-50 border border-slate-100 rounded-xl px-5 focus:outline-none focus:border-sky-500 transition-all text-slate-900 font-bold"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-neutral-700">Description</label>
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black text-slate-600 uppercase tracking-widest"><AlignLeft size={14} /> Description</label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="Describe what students will learn..."
-                                    className="w-full h-32 bg-neutral-50 border border-neutral-200 rounded-xl p-4 focus:outline-none focus:border-indigo-500 transition-all resize-none text-neutral-900"
+                                    placeholder="Brief explanation for students..."
+                                    className="w-full h-32 bg-slate-50 border border-slate-100 rounded-xl p-5 focus:outline-none focus:border-sky-500 transition-all resize-none text-slate-600 font-medium leading-relaxed"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-neutral-700">Icon / Emoji</label>
-                                <div className="flex gap-2">
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black text-slate-600 uppercase tracking-widest">Iconography</label>
+                                <div className="flex gap-4">
                                     <input
                                         value={icon}
                                         onChange={(e) => setIcon(e.target.value)}
-                                        className="w-16 h-12 bg-neutral-50 border border-neutral-200 rounded-xl text-center text-xl focus:outline-none focus:border-indigo-500 transition-all text-neutral-900"
+                                        className="w-20 h-16 bg-slate-50 border border-slate-100 rounded-2xl text-center text-3xl focus:outline-none focus:border-sky-500 transition-all text-slate-900 shadow-inner"
                                     />
-                                    <div className="grow flex items-center px-4 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-400">
-                                        Displayed on the card
+                                    <div className="grow flex items-center px-5 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white/50">
+                                        Module Visual Identifier
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
-                            <div className="flex items-start gap-3">
-                                <AlertCircle size={20} className="text-indigo-400 shrink-0 mt-0.5" />
-                                <p className="text-sm text-indigo-700 leading-relaxed font-medium">
-                                    <strong>Pro Tip:</strong> Add synonyms or common misinterpretations as alternatives (e.g. for "two", add "to" and "too").
+                        <div className="bg-sky-50 p-8 rounded-4xl border border-sky-100/50 aura-logo-shadow shadow-sky-100/30">
+                            <div className="flex items-start gap-4">
+                                <Info size={24} className="text-sky-500 shrink-0" />
+                                <p className="text-sm text-sky-800 leading-relaxed font-bold">
+                                    Include common homophones or variations in the "Alternatives" field to improve recognition accuracy.
                                 </p>
                             </div>
                         </div>
                     </section>
 
-                    {/* Word List */}
-                    <section className="lg:col-span-2 space-y-6">
-                        <div className="flex justify-between items-center mb-2 px-2">
-                            <h2 className="text-xs font-black uppercase tracking-widest text-neutral-400">Word Training List</h2>
-                            <span className="text-[10px] font-bold text-neutral-300 uppercase">{words.length} items total</span>
+                    {/* Word List Builder */}
+                    <section className="lg:col-span-2 space-y-8">
+                        <div className="flex justify-between items-center mb-4 px-4">
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-2">
+                                <LayoutDashboard size={14} /> Word Inventory
+                            </h2>
+                            <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest px-3 py-1 bg-sky-50 rounded-full border border-sky-100">{words.length} items</span>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             <AnimatePresence initial={false}>
                                 {words.map((word, i) => (
                                     <motion.div
                                         key={i}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm flex flex-col md:flex-row gap-4 items-start md:items-center relative group"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        className="bg-white p-8 rounded-4xl aura-card border-white/50 flex flex-col md:flex-row gap-8 items-start md:items-center relative group hover:border-sky-500/20"
                                     >
-                                        <div className="shrink-0 w-10 h-10 bg-neutral-50 rounded-xl flex items-center justify-center text-neutral-400 font-bold text-sm">
-                                            #{i + 1}
+                                        <div className="shrink-0 w-14 h-14 aura-gradient-primary rounded-2xl flex items-center justify-center text-white font-black text-base shadow-lg">
+                                            {i + 1}
                                         </div>
 
-                                        <div className="grow grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] uppercase font-black text-neutral-300 pl-1">Display Value</label>
+                                        <div className="grow grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                            <div className="space-y-2">
+                                                <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em] pl-1">Visual Value</label>
                                                 <input
                                                     value={word.value}
                                                     onChange={(e) => updateWord(i, "value", e.target.value)}
-                                                    placeholder="e.g. 1 or Cat"
-                                                    className="w-full h-11 bg-neutral-50 border border-neutral-200 rounded-xl px-4 focus:outline-none focus:border-indigo-500 transition-all font-bold text-neutral-900"
+                                                    placeholder="e.g. One"
+                                                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all font-black text-slate-900"
                                                 />
                                             </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] uppercase font-black text-neutral-300 pl-1">Target Word</label>
+                                            <div className="space-y-2">
+                                                <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em] pl-1">Target Word</label>
                                                 <input
                                                     value={word.word}
                                                     onChange={(e) => updateWord(i, "word", e.target.value)}
-                                                    placeholder="e.g. one or cat"
-                                                    className="w-full h-11 bg-neutral-50 border border-neutral-200 rounded-xl px-4 focus:outline-none focus:border-indigo-500 transition-all font-bold text-indigo-600"
+                                                    placeholder="e.g. one"
+                                                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all font-black text-sky-600"
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="md:w-48 space-y-1 w-full text-right">
-                                            <label className="text-[10px] uppercase font-black text-neutral-300 pr-1">Alternatives (JSON)</label>
+                                        <div className="md:w-56 space-y-2 w-full">
+                                            <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em] pl-1">Alt Tags (JSON)</label>
                                             <input
                                                 value={word.alts ? JSON.stringify(word.alts) : ""}
                                                 onChange={(e) => {
@@ -242,19 +236,18 @@ export default function AdminPage() {
                                                         const parsed = JSON.parse(e.target.value);
                                                         updateWord(i, "alts", parsed);
                                                     } catch {
-                                                        // If they are just typing, keep it as is or handle differently
                                                     }
                                                 }}
                                                 placeholder='["1", "to"]'
-                                                className="w-full h-11 bg-neutral-50 border border-neutral-200 rounded-xl px-4 focus:outline-none focus:border-indigo-500 transition-all text-xs font-mono text-neutral-900"
+                                                className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all text-xs font-mono font-bold text-slate-500"
                                             />
                                         </div>
 
                                         <button
                                             onClick={() => removeWord(i)}
-                                            className="absolute -top-2 -right-2 md:relative md:top-0 md:right-0 p-3 text-neutral-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                            className="absolute md:relative top-4 right-4 md:top-0 md:right-0 p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
                                         >
-                                            <Trash2 size={18} />
+                                            <Trash2 size={20} />
                                         </button>
                                     </motion.div>
                                 ))}
@@ -262,12 +255,12 @@ export default function AdminPage() {
 
                             <button
                                 onClick={addWord}
-                                className="w-full py-6 border-2 border-dashed border-neutral-200 rounded-4xl text-neutral-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all flex items-center justify-center gap-3 font-bold group"
+                                className="w-full py-10 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-slate-400 hover:text-sky-600 hover:border-sky-300 hover:bg-white transition-all flex flex-col items-center justify-center gap-4 group"
                             >
-                                <div className="w-8 h-8 rounded-full bg-neutral-100 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all">
-                                    <Plus size={20} />
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 group-hover:aura-gradient-primary group-hover:text-white flex items-center justify-center transition-all shadow-inner group-hover:shadow-lg group-hover:aura-logo-shadow">
+                                    <Plus size={28} />
                                 </div>
-                                Add Another Word
+                                <span className="font-black uppercase tracking-[0.3em] text-xs">Append New Record</span>
                             </button>
                         </div>
                     </section>

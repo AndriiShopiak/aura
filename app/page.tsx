@@ -2,10 +2,10 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Mic, BookOpen, Settings, ChevronRight } from "lucide-react";
+import { Mic, BookOpen, Settings, ChevronRight, Activity, Zap, Play } from "lucide-react";
 import Link from "next/link";
-import { MOCK_LESSONS } from "@/data/mockLessons";
 import { Lesson } from "@/types";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   const [lessons, setLessons] = React.useState<Lesson[]>([]);
@@ -16,8 +16,6 @@ export default function Home() {
       try {
         const res = await fetch("/api/lessons");
         const data = await res.json();
-        // Since the API returns meta info, we might need to mock words length if not returned
-        // Actually the API should return lesson meta data.
         setLessons(data);
       } catch (err) {
         console.error("Failed to fetch lessons:", err);
@@ -29,68 +27,100 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 flex flex-col items-center p-6 font-sans">
-      <div className="w-full max-w-4xl">
-        <header className="flex justify-between items-center mb-12 mt-8">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight text-neutral-800 flex items-center gap-3">
-              <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-sky-100 selection:text-sky-900">
+      {/* Top Navigation / Hero Area */}
+      <div className="aura-gradient-primary text-white pb-24 pt-12 relative overflow-hidden">
+        {/* Abstract background shapes */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-400/20 rounded-full -ml-32 -mb-32 blur-2xl" />
+
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <header className="flex justify-between items-center mb-16">
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-sky-600 aura-logo-shadow transition-transform">
                 <Mic size={24} />
               </div>
-              Aura
-            </h1>
-            <p className="text-neutral-400 mt-2 font-medium">Welcome back! Ready to practice?</p>
-          </div>
-          <Link
-            href="/admin"
-            className="p-3 rounded-2xl bg-white border border-neutral-200 text-neutral-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm"
-            title="Admin Panel"
-          >
-            <Settings size={20} />
-          </Link>
-        </header>
+              <div className="flex flex-col">
+                <h1 className="text-2xl font-black tracking-tight leading-none">Aura</h1>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-sky-100 mt-1 opacity-80">Speech App</span>
+              </div>
+            </div>
+            <Link
+              href="/admin"
+              className="px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white hover:text-sky-600 transition-all font-bold text-sm backdrop-blur-md flex items-center gap-2"
+            >
+              <Settings size={18} />
+              <span className="hidden sm:inline">For Teacher</span>
+            </Link>
+          </header>
 
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <BookOpen size={20} className="text-indigo-600" />
-            <h2 className="text-xl font-bold text-neutral-800">Available Lessons</h2>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+          >
+            <div className="max-w-xl text-center lg:text-left">
+              <h2 className="text-4xl md:text-6xl font-black leading-[1.1] mb-6 tracking-tight">
+                Master English <br />
+                <span className="text-sky-200">Pronunciation</span>
+              </h2>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      <main className="max-w-6xl mx-auto px-6 -mt-16 relative z-20 pb-20">
+        <section>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-sky-600">
+                <BookOpen size={20} />
+              </div>
+            </div>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-64 bg-white animate-pulse rounded-3xl border border-neutral-100" />
+                <div key={i} className="h-72 aura-card animate-pulse" />
               ))}
             </div>
           ) : lessons.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-4xl border border-dashed border-neutral-200">
-              <p className="text-neutral-400 font-medium">No lessons published yet.</p>
-              <Link href="/admin" className="text-indigo-600 font-bold mt-4 inline-block hover:underline">Create your first lesson</Link>
+            <div className="text-center py-24 aura-card bg-white/50 backdrop-blur-sm border-dashed border-sky-200">
+              <p className="text-slate-400 font-bold text-lg mb-6">No lessons published yet.</p>
+              <Link href="/admin" className="px-8 py-3 aura-gradient-primary text-white rounded-xl font-black shadow-lg shadow-sky-200 hover:scale-105 transition-all">
+                Create First Lesson
+              </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {lessons.map((lesson) => (
-                <Link key={lesson.id} href={`/train/${lesson.id}`}>
+                <Link key={lesson.id} href={`/train/${lesson.id}`} className="group">
                   <motion.div
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm hover:shadow-xl hover:shadow-indigo-50/50 hover:border-indigo-100 transition-all cursor-pointer group flex flex-col h-full"
+                    whileHover={{ y: -6 }}
+                    className="aura-card aura-card-hover p-8 h-full flex flex-col items-start relative overflow-hidden bg-white"
                   >
-                    <div className="w-12 h-12 bg-neutral-50 group-hover:bg-indigo-50 rounded-2xl flex items-center justify-center text-neutral-400 group-hover:text-indigo-600 transition-colors mb-4 text-xl font-bold">
+                    {/* Decorative pattern */}
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-sky-50 rounded-bl-[4rem] group-hover:bg-sky-100 transition-colors -mr-8 -mt-8" />
+
+                    <div className="w-16 h-16 bg-slate-50 group-hover:aura-gradient-primary rounded-2xl flex items-center justify-center text-3xl transition-all mb-8 shadow-inner group-hover:text-white group-hover:scale-110 group-hover:rotate-3">
                       {lesson.icon || "🎓"}
                     </div>
-                    <h3 className="text-lg font-bold text-neutral-800 mb-2 group-hover:text-indigo-700 transition-colors">
+
+                    <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-sky-600 transition-colors">
                       {lesson.title}
                     </h3>
-                    <p className="text-neutral-400 text-sm mb-6 grow leading-relaxed">
+
+                    <p className="text-slate-500 text-sm leading-relaxed mb-8 grow font-medium">
                       {lesson.description}
                     </p>
-                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-neutral-50 group-hover:border-indigo-50 transition-colors">
-                      <span className="text-[10px] uppercase font-black tracking-widest text-neutral-300 group-hover:text-indigo-300">
-                        Explore Lesson
+
+                    <div className="w-full flex items-center justify-between pt-6 border-t border-slate-50 group-hover:border-sky-50">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-sky-400 transition-colors">
+                        Start Session
                       </span>
-                      <div className="w-8 h-8 rounded-full bg-neutral-100 group-hover:bg-indigo-600 flex items-center justify-center text-neutral-400 group-hover:text-white transition-all shadow-sm">
-                        <ChevronRight size={16} />
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-sky-600 flex items-center justify-center text-slate-400 group-hover:text-white transition-all">
+                        <ChevronRight size={18} />
                       </div>
                     </div>
                   </motion.div>
@@ -99,13 +129,20 @@ export default function Home() {
             </div>
           )}
         </section>
+      </main>
 
-        <footer className="mt-20 py-8 border-t border-neutral-200 flex flex-col items-center">
-          <p className="text-neutral-300 text-[10px] font-bold uppercase tracking-[0.2em]">
-            English Speech Trainer v2.1 • Aura Platform
-          </p>
-        </footer>
-      </div>
+      <Footer />
+
+      <style jsx global>{`
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
