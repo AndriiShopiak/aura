@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, Play, RotateCcw, Mic, MicOff, CheckCircle2, XCircle, ArrowLeft, Zap, Trophy } from "lucide-react";
 import { Word } from "@/types";
@@ -12,13 +12,18 @@ interface TrainerProps {
     onComplete?: (score: number) => void;
 }
 
-const TIMER_START = 6;
+interface TrainerProps {
+    title: string;
+    words: Word[];
+    responseTimer: number;
+    onComplete?: (score: number) => void;
+}
 
-export default function Trainer({ title, words, onComplete }: TrainerProps) {
+export default function Trainer({ title, words, responseTimer, onComplete }: TrainerProps) {
     const [gameState, setGameState] = useState<"idle" | "playing" | "result">("idle");
     const [idx, setIdx] = useState(0);
     const [score, setScore] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(TIMER_START);
+    const [timeLeft, setTimeLeft] = useState(responseTimer);
     const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
     const [spokenText, setSpokenText] = useState("");
     const [isListening, setIsListening] = useState(false);
@@ -93,7 +98,7 @@ export default function Trainer({ title, words, onComplete }: TrainerProps) {
             if (n < words.length) {
                 setSpokenText("");
                 setFeedback(null);
-                setTimeLeft(TIMER_START);
+                setTimeLeft(responseTimer);
                 return n;
             }
             setGameState("result");
@@ -189,7 +194,7 @@ export default function Trainer({ title, words, onComplete }: TrainerProps) {
         setScore(0);
         setFeedback(null);
         setSpokenText("");
-        setTimeLeft(TIMER_START);
+        setTimeLeft(responseTimer);
         setGameState("playing");
         statusRef.current.busy = false;
         startMic();
@@ -224,7 +229,7 @@ export default function Trainer({ title, words, onComplete }: TrainerProps) {
                             </div>
                             <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Pronunciation Master</h2>
                             <p className="text-slate-500 font-medium mb-12 px-6 leading-relaxed">
-                                Get ready to speak! We'll show you words, and you'll have <span className="text-sky-600 font-black">6 seconds</span> to pronounce each one correctly.
+                                Get ready to speak! We'll show you words, and you'll have <span className="text-sky-600 font-black">{responseTimer} seconds</span> to pronounce each one correctly.
                             </p>
                             <button onClick={startGame} className="w-full aura-gradient-primary text-white h-16 rounded-2xl font-black transition-all shadow-xl shadow-sky-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3">
                                 <Play size={22} fill="currentColor" />
@@ -241,7 +246,7 @@ export default function Trainer({ title, words, onComplete }: TrainerProps) {
                                     <motion.circle
                                         cx="96" cy="96" r="90" fill="transparent" stroke={timeLeft < 2 ? "#f43f5e" : "#0ea5e9"} strokeWidth="10" strokeLinecap="round"
                                         strokeDasharray={2 * Math.PI * 90}
-                                        animate={{ strokeDashoffset: (1 - timeLeft / TIMER_START) * 2 * Math.PI * 90 }}
+                                        animate={{ strokeDashoffset: (1 - timeLeft / responseTimer) * 2 * Math.PI * 90 }}
                                         transition={{ duration: 1, ease: "linear" }}
                                     />
                                 </svg>

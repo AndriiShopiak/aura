@@ -1,34 +1,44 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 export async function GET() {
     try {
         const { data, error } = await supabase
             .from("lessons")
-            .select("*")
+            .select("*, words(*)")
             .order("created_at", { ascending: false });
 
         if (error) throw error;
-        return NextResponse.json(data);
+
+        const mappedData = data.map(lesson => ({
+            ...lesson,
+            responseTimer: lesson.response_timer
+        }));
+
+        return NextResponse.json(mappedData);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { title, description, icon, words, adminKey } = body;
+        const { title, description, words, responseTimer, adminKey } = body;
 
         // Basic admin key validation
-        if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        if (!adminKey) {
+            return NextResponse.json({ error: "Admin key is missing in request body" }, { status: 401 });
+        }
+
+        if (adminKey.trim() !== process.env.ADMIN_SECRET_KEY?.trim()) {
+            return NextResponse.json({ error: "Invalid admin key" }, { status: 401 });
         }
 
         // 1. Insert lesson
         const { data: lesson, error: lessonError } = await supabase
             .from("lessons")
-            .insert([{ title, description, icon }])
+            .insert([{ title, description, response_timer: responseTimer, icon: "🎓" }])
             .select()
             .single();
 

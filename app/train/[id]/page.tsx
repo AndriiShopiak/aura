@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Trainer from "@/components/Trainer";
-import { MOCK_LESSONS } from "@/data/mockLessons";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -55,6 +54,7 @@ export default function TrainPage() {
             <Trainer
                 title={lesson.title}
                 words={lesson.words}
+                responseTimer={lesson.responseTimer || 6}
                 onComplete={(score) => {
                     console.log(`Finished ${lesson.title} with score ${score}`);
                 }}

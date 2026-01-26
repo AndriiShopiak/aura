@@ -1,4 +1,5 @@
 export interface Word {
+    id?: string;
     value: number | string;
     word: string;
     alts?: string[];
@@ -9,5 +10,6 @@ export interface Lesson {
     title: string;
     description: string;
     icon?: string;
+    responseTimer: number;
     words: Word[];
 }

@@ -88,9 +88,6 @@ export default function Home() {
           ) : lessons.length === 0 ? (
             <div className="text-center py-24 aura-card bg-white/50 backdrop-blur-sm border-dashed border-sky-200">
               <p className="text-slate-400 font-bold text-lg mb-6">No lessons published yet.</p>
-              <Link href="/admin" className="px-8 py-3 aura-gradient-primary text-white rounded-xl font-black shadow-lg shadow-sky-200 hover:scale-105 transition-all">
-                Create First Lesson
-              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -104,7 +101,7 @@ export default function Home() {
                     <div className="absolute top-0 right-0 w-24 h-24 bg-sky-50 rounded-bl-[4rem] group-hover:bg-sky-100 transition-colors -mr-8 -mt-8" />
 
                     <div className="w-16 h-16 bg-slate-50 group-hover:aura-gradient-primary rounded-2xl flex items-center justify-center text-3xl transition-all mb-8 shadow-inner group-hover:text-white group-hover:scale-110 group-hover:rotate-3">
-                      {lesson.icon || "🎓"}
+                      <BookOpen size={32} />
                     </div>
 
                     <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-sky-600 transition-colors">
