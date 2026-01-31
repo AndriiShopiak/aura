@@ -10,6 +10,7 @@ export interface Lesson {
     title: string;
     description: string;
     icon?: string;
+    imageUrl?: string;
     responseTimer: number;
     words: Word[];
 }

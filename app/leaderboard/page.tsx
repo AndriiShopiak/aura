@@ -32,7 +32,7 @@ export default function LeaderboardPage() {
     }, [])
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-yellow-50 via-sky-50 to-pink-50 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+        <div className="min-h-screen bg-linear-to-br from-rose-50 via-amber-50 to-emerald-50 dark:from-slate-950 dark:via-rose-950/20 dark:to-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-3xl mx-auto">
                 {/* Header Section */}
                 <div className="text-center mb-16 relative">

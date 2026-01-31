@@ -7,6 +7,13 @@ import Link from "next/link";
 import { Lesson } from "@/types";
 import Footer from "@/components/Footer";
 
+const ANIMAL_IMAGES = [
+  "/animals/lion.png",
+  "/animals/elephant.png",
+  "/animals/fox.png",
+  "/animals/dino.png",
+];
+
 export default function Home() {
   const [lessons, setLessons] = React.useState<Lesson[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -73,8 +80,29 @@ export default function Home() {
             <div className="max-w-xl text-center lg:text-left">
               <h2 className="text-4xl md:text-6xl font-black leading-[1.1] mb-6 tracking-tight">
                 Master English <br />
-                <span className="text-sky-200">Pronunciation</span>
+                <span className="text-yellow-300 drop-shadow-lg">Pronunciation</span>
               </h2>
+              <p className="text-sky-50 text-xl font-medium mb-8 opacity-90 hidden lg:block">
+                Learn and play with your favorite animal friends!
+              </p>
+            </div>
+
+            <div className="flex justify-center items-center relative">
+              <motion.div
+                animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="relative z-10"
+              >
+                <img
+                  src="/animals/lion.png"
+                  alt="Friendly Lion Cub"
+                  className="w-full max-w-[400px] h-auto drop-shadow-3xl"
+                />
+              </motion.div>
+
+              {/* Magical sparkles/blobs behind the animal */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-300/30 rounded-full blur-[80px] z-0" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-400/20 rounded-full blur-[100px] animate-pulse z-0" />
             </div>
           </motion.div>
         </div>
@@ -106,29 +134,47 @@ export default function Home() {
                 <Link key={lesson.id} href={`/train/${lesson.id}`} className="group">
                   <motion.div
                     whileHover={{ y: -6 }}
-                    className="aura-card aura-card-hover p-8 h-full flex flex-col items-start relative overflow-hidden bg-white"
+                    className="aura-card aura-card-hover p-0 h-full flex flex-col items-start relative overflow-hidden aura-card-gradient border-none bg-white shadow-xl rounded-[2.5rem]"
                   >
-                    {/* Decorative pattern */}
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-sky-50 rounded-bl-[4rem] group-hover:bg-sky-100 transition-colors -mr-8 -mt-8" />
+                    {/* Animal Image Header */}
+                    <div className="w-full h-48 relative overflow-hidden p-6 bg-slate-50">
+                      <div className="absolute inset-0 aura-gradient-primary opacity-5" />
+                      <motion.img
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        src={ANIMAL_IMAGES[lessons.indexOf(lesson) % ANIMAL_IMAGES.length]}
+                        alt={lesson.title}
+                        className="w-full h-full object-contain relative z-10 drop-shadow-2xl"
+                      />
 
-                    <div className="w-16 h-16 bg-slate-50 group-hover:aura-gradient-primary rounded-2xl flex items-center justify-center text-3xl transition-all mb-8 shadow-inner group-hover:text-white group-hover:scale-110 group-hover:rotate-3">
-                      <BookOpen size={32} />
+                      {/* Decorative blobs */}
+                      <div className="absolute top-2 right-2 w-12 h-12 bg-yellow-400/20 rounded-full blur-xl" />
+                      <div className="absolute bottom-2 left-2 w-16 h-16 bg-pink-400/20 rounded-full blur-xl" />
                     </div>
 
-                    <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-sky-600 transition-colors">
-                      {lesson.title}
-                    </h3>
+                    <div className="p-8 pt-6 w-full flex flex-col grow">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 aura-gradient-primary rounded-xl flex items-center justify-center shadow-lg text-white group-hover:rotate-6 transition-transform">
+                          <BookOpen size={20} />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors truncate">
+                          {lesson.title}
+                        </h3>
+                      </div>
 
-                    <p className="text-slate-500 text-sm leading-relaxed mb-8 grow font-medium">
-                      {lesson.description}
-                    </p>
+                      <p className="text-slate-500 text-sm leading-relaxed mb-8 grow font-medium group-hover:text-slate-700">
+                        {lesson.description}
+                      </p>
 
-                    <div className="w-full flex items-center justify-between pt-6 border-t border-slate-50 group-hover:border-sky-50">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-sky-400 transition-colors">
-                        Start Session
-                      </span>
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-sky-600 flex items-center justify-center text-slate-400 group-hover:text-white transition-all">
-                        <ChevronRight size={18} />
+                      <div className="w-full flex items-center justify-between pt-6 border-t border-slate-100 group-hover:border-primary/20">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-primary transition-colors">
+                          Play & Learn
+                        </span>
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:aura-gradient-primary flex items-center justify-center text-slate-400 group-hover:text-white transition-all shadow-sm group-hover:shadow-primary/30">
+                          <ChevronRight size={18} />
+                        </div>
                       </div>
                     </div>
                   </motion.div>
