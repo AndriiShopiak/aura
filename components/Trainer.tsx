@@ -1,16 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, Play, RotateCcw, Mic, MicOff, CheckCircle2, XCircle, ArrowLeft, Zap, Trophy } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Mic, ArrowLeft, MicOff } from "lucide-react";
 import { Word } from "@/types";
 import Link from "next/link";
-
-interface TrainerProps {
-    title: string;
-    words: Word[];
-    onComplete?: (score: number) => void;
-}
+import { motion, AnimatePresence } from "framer-motion";
 
 interface TrainerProps {
     title: string;
@@ -21,188 +15,182 @@ interface TrainerProps {
 
 export default function Trainer({ title, words, responseTimer, onComplete }: TrainerProps) {
     const [gameState, setGameState] = useState<"idle" | "playing" | "result">("idle");
-    const [idx, setIdx] = useState(0);
+    const [isListening, setIsListening] = useState(false);
+    const [transcript, setTranscript] = useState("");
+    const [volume, setVolume] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(responseTimer);
-    const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
-    const [spokenText, setSpokenText] = useState("");
-    const [isListening, setIsListening] = useState(false);
+    const [isCorrect, setIsCorrect] = useState(false);
 
-    // Refs for stable logic access
     const recognitionRef = useRef<any>(null);
-    const watchdogRef = useRef<NodeJS.Timeout | null>(null);
-    const statusRef = useRef({
-        playing: false,
-        busy: false,
-        index: 0,
-        feedback: feedback,
-        starting: false
-    });
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const isTransitioningRef = useRef(false);
+    const currentIndexRef = useRef(0);
+    const isCorrectRef = useRef(false);
 
-    // Sync refs to state
+    // Synchronize refs with state for use in async/closure-bound functions
     useEffect(() => {
-        statusRef.current.playing = gameState === "playing";
-        statusRef.current.index = idx;
-        statusRef.current.feedback = feedback;
-    }, [gameState, idx, feedback]);
+        currentIndexRef.current = currentIndex;
+    }, [currentIndex]);
 
-    const stopMic = useCallback(() => {
+    useEffect(() => {
+        isCorrectRef.current = isCorrect;
+    }, [isCorrect]);
+
+    const stopListening = useCallback(() => {
+        // Зупинка розпізнавання
         if (recognitionRef.current) {
-            try {
-                recognitionRef.current.stop();
-            } catch { }
+            recognitionRef.current.stop();
         }
-    }, []);
 
-    const startMic = useCallback(() => {
-        if (recognitionRef.current && statusRef.current.playing && !statusRef.current.busy && !statusRef.current.feedback) {
-            if (statusRef.current.starting) return;
-            try {
-                statusRef.current.starting = true;
-                recognitionRef.current.start();
-            } catch (e) {
-            } finally {
-                setTimeout(() => { statusRef.current.starting = false; }, 200);
-            }
+        // Очищення Audio API
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
         }
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        setVolume(0);
     }, []);
-
-    useEffect(() => {
-        watchdogRef.current = setInterval(() => {
-            if (statusRef.current.playing && !statusRef.current.busy && !statusRef.current.feedback && !isListening) {
-                startMic();
-            }
-        }, 1500);
-        return () => { if (watchdogRef.current) clearInterval(watchdogRef.current); };
-    }, [isListening, startMic]);
-
-    const speak = useCallback((text: string) => {
-        if (!("speechSynthesis" in window)) return;
-        window.speechSynthesis.cancel();
-        const utt = new SpeechSynthesisUtterance(text);
-        utt.lang = "en-US";
-
-        utt.onstart = () => { statusRef.current.busy = true; stopMic(); };
-        utt.onend = () => {
-            setTimeout(() => {
-                statusRef.current.busy = false;
-                if (statusRef.current.playing && !statusRef.current.feedback) startMic();
-            }, 400);
-        };
-        window.speechSynthesis.speak(utt);
-    }, [stopMic, startMic]);
 
     const handleNext = useCallback(() => {
-        setIdx(prev => {
-            const n = prev + 1;
-            if (n < words.length) {
-                setSpokenText("");
-                setFeedback(null);
+        if (isTransitioningRef.current) return;
+        isTransitioningRef.current = true;
+
+        if (currentIndexRef.current < words.length - 1) {
+            setTimeout(() => {
+                setCurrentIndex(prev => prev + 1);
                 setTimeLeft(responseTimer);
-                return n;
-            }
-            setGameState("result");
-            if (onComplete) onComplete(score);
-            return prev;
-        });
-    }, [words.length, score, onComplete]);
-
-    const triggerResult = useCallback((correct: boolean) => {
-        if (statusRef.current.feedback) return;
-        statusRef.current.feedback = correct ? "correct" : "wrong";
-        stopMic();
-        if (correct) {
-            setFeedback("correct");
-            setScore(s => s + 1);
-            setTimeout(handleNext, 1200);
+                setIsCorrect(false);
+                setTranscript("");
+                isTransitioningRef.current = false;
+            }, 1000);
         } else {
-            setFeedback("wrong");
-            speak(words[statusRef.current.index].word);
-            setTimeout(handleNext, 2200);
+            setGameState("result");
+            stopListening();
+            isTransitioningRef.current = false;
         }
-    }, [handleNext, speak, stopMic, words]);
+    }, [words.length, responseTimer, stopListening]);
 
-    useEffect(() => {
-        const Speech = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (!Speech) return;
+    const startListening = useCallback(async () => {
+        if (typeof window !== "undefined") {
+            // 1. Спроба розпізнавання мовлення
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-        const rec = new Speech();
-        rec.continuous = false;
-        rec.interimResults = true;
-        rec.lang = "en-US";
-        rec.maxAlternatives = 3;
+            if (SpeechRecognition) {
+                recognitionRef.current = new SpeechRecognition();
+                recognitionRef.current.continuous = true;
+                recognitionRef.current.interimResults = true;
+                recognitionRef.current.lang = 'en-US';
 
-        rec.onstart = () => setIsListening(true);
-        rec.onend = () => {
-            setIsListening(false);
-            if (statusRef.current.playing && !statusRef.current.busy && !statusRef.current.feedback) {
-                setTimeout(startMic, 150);
-            }
-        };
+                recognitionRef.current.onstart = () => setIsListening(true);
+                recognitionRef.current.onend = () => setIsListening(false);
 
-        rec.onerror = (e: any) => {
-            setIsListening(false);
-        };
+                recognitionRef.current.onresult = (event: any) => {
+                    if (isTransitioningRef.current) return;
 
-        rec.onresult = (e: any) => {
-            if (statusRef.current.busy || statusRef.current.feedback) return;
+                    let currentTranscript = "";
+                    const currentWord = words[currentIndexRef.current];
+                    if (!currentWord || isCorrectRef.current) return;
 
-            const txt = Array.from(e.results)
-                .map((r: any) => r[0].transcript)
-                .join("")
-                .toLowerCase()
-                .trim();
+                    const target = currentWord.word.toLowerCase().trim();
+                    const alts = currentWord.alts?.map(a => a.toLowerCase().trim()) || [];
 
-            setSpokenText(txt);
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const spoke = event.results[i][0].transcript.toLowerCase().trim();
+                        currentTranscript += event.results[i][0].transcript;
 
-            const target = words[statusRef.current.index];
-            const match = [target.word, ...(target.alts || [])].some(m => {
-                const wordsArr = txt.split(/\s+/);
-                return wordsArr.includes(m.toLowerCase()) || txt === m.toLowerCase() || txt.endsWith(m.toLowerCase());
-            });
-
-            if (match) {
-                triggerResult(true);
-            }
-        };
-
-        recognitionRef.current = rec;
-        return () => {
-            rec.onend = null;
-            rec.stop();
-        };
-    }, [triggerResult, startMic, words]);
-
-    useEffect(() => {
-        let t: any;
-        if (gameState === "playing" && !feedback && isListening) {
-            t = setInterval(() => {
-                setTimeLeft(v => {
-                    if (v <= 1) {
-                        triggerResult(false);
-                        return 0;
+                        if (spoke === target || spoke.includes(target) || alts.some(a => spoke === a || spoke.includes(a))) {
+                            if (isCorrectRef.current) return;
+                            setIsCorrect(true);
+                            setScore(s => s + 1);
+                            handleNext();
+                            return;
+                        }
                     }
-                    return v - 1;
+                    setTranscript(currentTranscript);
+                };
+
+                recognitionRef.current.start();
+
+                // 2. Налаштування Web Audio API для амплітуди
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    streamRef.current = stream;
+
+                    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    const source = audioContext.createMediaStreamSource(stream);
+                    const analyser = audioContext.createAnalyser();
+
+                    analyser.fftSize = 256;
+                    source.connect(analyser);
+
+                    audioContextRef.current = audioContext;
+                    analyserRef.current = analyser;
+
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                    const updateVolume = () => {
+                        if (!analyserRef.current) return;
+
+                        analyserRef.current.getByteFrequencyData(dataArray);
+                        let sum = 0;
+                        for (let i = 0; i < dataArray.length; i++) {
+                            sum += dataArray[i];
+                        }
+                        const average = sum / dataArray.length;
+                        // Нормалізуємо значення (від 0 до 1), де 0 - тиша, 1 - гучно
+                        const normalizedVolume = Math.min(1, average / 60);
+                        setVolume(normalizedVolume);
+
+                        animationFrameRef.current = requestAnimationFrame(updateVolume);
+                    };
+
+                    updateVolume();
+                } catch (err) {
+                    console.error("Error accessing microphone for AudioContext:", err);
+                }
+            } else {
+                alert("Speech recognition is not supported in this browser.");
+            }
+        }
+    }, [currentIndex, isCorrect, words, responseTimer, handleNext, stopListening]);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (gameState === "playing" && isListening && !isCorrect) {
+            timer = setInterval(() => {
+                setTimeLeft(prev => {
+                    if (prev <= 1) {
+                        handleNext();
+                        return responseTimer;
+                    }
+                    return prev - 1;
                 });
             }, 1000);
         }
-        return () => clearInterval(t);
-    }, [gameState, feedback, isListening, triggerResult]);
+        return () => clearInterval(timer);
+    }, [gameState, isListening, isCorrect, handleNext, responseTimer]);
 
-    const startGame = () => {
-        setIdx(0);
-        setScore(0);
-        setFeedback(null);
-        setSpokenText("");
-        setTimeLeft(responseTimer);
-        setGameState("playing");
-        statusRef.current.busy = false;
-        startMic();
-    };
+    useEffect(() => {
+        return () => {
+            stopListening();
+        };
+    }, [stopListening]);
 
     return (
         <div className="w-full max-w-md aura-card aura-glass p-0 relative overflow-hidden transition-all duration-500 shadow-2xl border-white/40">
-            {/* Header / Scoreboard */}
+            {/* Header */}
             <div className="aura-gradient-primary p-6 text-white relative z-10 flex justify-between items-center">
                 <div className="flex flex-col">
                     <Link href="/" className="flex items-center gap-2 text-white/70 hover:text-white transition-all mb-2 group">
@@ -211,107 +199,157 @@ export default function Trainer({ title, words, responseTimer, onComplete }: Tra
                     </Link>
                     <h1 className="text-xl font-black tracking-tight">{title}</h1>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/20 flex items-center gap-4">
-                    <div className="flex flex-col items-center">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-sky-200">Score</span>
-                        <span className="text-2xl font-black leading-none">{score}</span>
-                    </div>
-                </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="p-10 relative z-10 min-h-[440px] flex flex-col items-center justify-center">
-                <AnimatePresence mode="wait">
-                    {gameState === "idle" && (
-                        <motion.div key="idle" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} className="w-full text-center">
-                            <div className="w-24 h-24 aura-gradient-primary rounded-4xl flex items-center justify-center mx-auto mb-8 shadow-xl aura-logo-shadow text-white">
-                                <Mic size={40} />
-                            </div>
-                            <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Pronunciation Master</h2>
-                            <p className="text-slate-500 font-medium mb-12 px-6 leading-relaxed">
-                                Get ready to speak! We'll show you words, and you'll have <span className="text-sky-600 font-black">{responseTimer} seconds</span> to pronounce each one correctly.
-                            </p>
-                            <button onClick={startGame} className="w-full aura-gradient-primary text-white h-16 rounded-2xl font-black transition-all shadow-xl shadow-sky-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3">
-                                <Play size={22} fill="currentColor" />
-                                Start Training
-                            </button>
-                        </motion.div>
-                    )}
+            <div className={`p-10 relative z-10 min-h-[440px] flex flex-col items-center justify-center transition-colors duration-500 ${isCorrect ? 'bg-green-500/10' : ''}`}>
+                {gameState === "idle" && (
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full text-center">
+                        <div className="w-24 h-24 aura-gradient-primary rounded-4xl flex items-center justify-center mx-auto mb-8 shadow-xl text-white">
+                            <Mic size={40} />
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Ready to Start?</h2>
+                        <p className="text-slate-500 font-medium mb-12 px-6 leading-relaxed">
+                            We are starting from scratch to build the perfect trainer.
+                        </p>
+                        <button
+                            onClick={() => setGameState("playing")}
+                            className="w-full aura-gradient-primary text-white h-16 rounded-2xl font-black transition-all shadow-xl hover:scale-[1.02] active:scale-95"
+                        >
+                            Start Fresh
+                        </button>
+                    </motion.div>
+                )}
 
-                    {gameState === "playing" && (
-                        <motion.div key={words[idx].value} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full flex flex-col items-center">
-                            <div className="relative w-48 h-48 flex items-center justify-center mb-12">
-                                <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                    <circle cx="96" cy="96" r="90" fill="transparent" stroke="#f1f5f9" strokeWidth="10" />
-                                    <motion.circle
-                                        cx="96" cy="96" r="90" fill="transparent" stroke={timeLeft < 2 ? "#f43f5e" : "#0ea5e9"} strokeWidth="10" strokeLinecap="round"
-                                        strokeDasharray={2 * Math.PI * 90}
-                                        animate={{ strokeDashoffset: (1 - timeLeft / responseTimer) * 2 * Math.PI * 90 }}
-                                        transition={{ duration: 1, ease: "linear" }}
-                                    />
-                                </svg>
-                                <span className="text-9xl font-black text-slate-900 tracking-tighter drop-shadow-sm">{words[idx].value}</span>
-                            </div>
+                {gameState === "playing" && (
+                    <div className="w-full text-center flex flex-col items-center">
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-8">
+                            Step 1: Speech Recognition
+                        </p>
 
-                            <div className="w-full bg-slate-50 rounded-2xl p-6 border border-slate-100 mb-10 min-h-28 flex flex-col justify-center shadow-inner relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-16 h-16 bg-sky-100/30 rounded-bl-3xl -mr-4 -mt-4 transition-all group-hover:bg-sky-100/50" />
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 relative z-10">AI Hearing System</span>
-                                <p className={`text-xl font-bold leading-tight relative z-10 transition-colors ${spokenText ? 'text-sky-600' : 'text-slate-300'}`}>
-                                    {spokenText ? `"${spokenText}"` : "Speak now..."}
-                                </p>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <button onClick={() => speak(words[idx].word)} className="w-16 h-16 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-sky-600 hover:border-sky-600 hover:shadow-lg transition-all flex items-center justify-center group shadow-sm">
-                                    <Volume2 size={24} className="group-hover:scale-110 transition-transform" />
-                                </button>
-                                <div className={`w-16 h-16 rounded-2xl border transition-all flex items-center justify-center ${isListening ? 'bg-sky-50 border-sky-400 text-sky-600 shadow-inner' : 'bg-slate-50 border-slate-200 text-slate-300'}`}>
-                                    <Mic size={24} className={isListening ? "animate-pulse" : ""} />
-                                </div>
-                            </div>
-
-                            <AnimatePresence>
-                                {feedback && (
-                                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className={`mt-8 px-8 py-3 rounded-full border text-xs font-black uppercase tracking-[0.15em] flex items-center gap-3 shadow-sm ${feedback === 'correct' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 aura-logo-shadow shadow-emerald-200/50' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
-                                        {feedback === 'correct' ? <Zap size={16} className="fill-current" /> : <XCircle size={16} className="fill-current" />}
-                                        {feedback === 'correct' ? 'Perfect Match!' : `Try again: "${words[idx].word}"`}
+                        <div className="relative mb-12">
+                            <AnimatePresence mode="wait">
+                                {isListening ? (
+                                    <motion.div
+                                        key="listening"
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.8 }}
+                                        className="relative"
+                                    >
+                                        <motion.div
+                                            animate={{
+                                                scale: 1 + volume * 0.5,
+                                                backgroundColor: isCorrect ? "#22c55e" : "#5d5dff"
+                                            }}
+                                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                            className="w-24 h-24 rounded-4xl flex items-center justify-center shadow-xl text-white z-10 relative"
+                                        >
+                                            <Mic size={40} />
+                                        </motion.div>
+                                        <motion.div
+                                            animate={{
+                                                scale: 1 + volume * 2, // Хвиля розходиться сильніше
+                                                opacity: 0.5 - volume * 0.3
+                                            }}
+                                            transition={{ type: "tween", ease: "easeOut", duration: 0.2 }}
+                                            className="absolute inset-0 bg-blue-500/20 rounded-4xl z-0"
+                                        />
                                     </motion.div>
+                                ) : (
+                                    <motion.button
+                                        key="idle-mic"
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.8 }}
+                                        onClick={startListening}
+                                        className="w-24 h-24 bg-white border-2 border-slate-100 rounded-4xl flex items-center justify-center shadow-sm text-slate-400 hover:text-blue-500 hover:border-blue-200 transition-all group"
+                                    >
+                                        <Mic size={40} className="group-hover:scale-110 transition-transform" />
+                                    </motion.button>
                                 )}
                             </AnimatePresence>
-                        </motion.div>
-                    )}
+                        </div>
 
-                    {gameState === "result" && (
-                        <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full text-center">
-                            <div className="mb-10 relative">
-                                <div className="w-32 h-32 aura-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl text-white relative z-10">
-                                    <Trophy size={64} />
-                                </div>
-                                <span className="text-[10px] uppercase font-black tracking-[0.3em] text-slate-400 block mb-3">Session Complete</span>
-                                <div className="text-8xl font-black text-slate-900 tracking-tighter">
-                                    {Math.round((score / words.length) * 100)}<span className="text-3xl text-sky-500">%</span>
-                                </div>
+                        <div className="w-full mb-8">
+                            <div className="flex justify-between items-center mb-2 px-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    Time Remaining
+                                </span>
+                                <span className={`text-sm font-black ${timeLeft <= 3 ? 'text-rose-500 animate-pulse' : 'text-slate-600'}`}>
+                                    {timeLeft}s
+                                </span>
                             </div>
-                            <p className="text-slate-500 font-medium mb-12 leading-relaxed">
-                                Great job! You correctly pronounced <strong className="text-slate-900 font-black">{score} / {words.length}</strong> words.
-                                Accuracy is the key to fluency!
-                            </p>
-                            <button onClick={startGame} className="w-full aura-gradient-primary text-white h-16 rounded-2xl font-black shadow-xl shadow-sky-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
-                                <RotateCcw size={22} />
-                                Practice Again
-                            </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: "100%" }}
+                                    animate={{ width: `${(timeLeft / responseTimer) * 100}%` }}
+                                    className={`h-full ${timeLeft <= 3 ? 'bg-rose-500' : 'bg-blue-500'}`}
+                                />
+                            </div>
+                        </div>
 
-            {/* Background effects */}
-            <div className={`absolute inset-0 pointer-events-none z-0 transition-opacity duration-500 ${feedback === "correct" ? "opacity-100" : "opacity-0"}`}>
-                <div className="absolute inset-0 bg-emerald-500/5" />
-                <div className="absolute top-0 w-full h-1 aura-gradient-primary" />
-            </div>
-            <div className={`absolute inset-0 pointer-events-none z-0 transition-opacity duration-500 ${feedback === "wrong" ? "opacity-100" : "opacity-0"}`}>
-                <div className="absolute inset-0 bg-rose-500/5" />
+                        <div className="mb-8">
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-2">
+                                Say this word:
+                                <span className="ml-2 text-slate-300">({currentIndex + 1}/{words.length})</span>
+                            </p>
+                            <h3 className="text-4xl font-black text-slate-800 tracking-tight">
+                                {words[currentIndex]?.value}
+                            </h3>
+                        </div>
+
+                        <div className="w-full min-h-[100px] p-6 rounded-2xl bg-white/50 border border-slate-100 mb-8 flex flex-col items-center justify-center backdrop-blur-sm">
+                            {transcript ? (
+                                <p className="text-xl font-bold text-slate-800 italic">"{transcript}"</p>
+                            ) : (
+                                <p className="text-slate-400 font-medium italic">Listening...</p>
+                            )}
+                        </div>
+                        <pre className="text-slate-400 font-medium italic">{currentIndex}</pre>
+
+                        {isListening ? (
+                            <button
+                                onClick={stopListening}
+                                className="px-8 h-12 bg-rose-50 text-rose-600 rounded-xl font-black text-sm transition-all hover:bg-rose-100 flex items-center gap-2"
+                            >
+                                <MicOff size={16} />
+                                Stop Listening
+                            </button>
+                        ) : (
+                            <button
+                                onClick={startListening}
+                                className="px-8 h-12 aura-gradient-primary text-white rounded-xl font-black text-sm transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                            >
+                                Activate Microphone
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {gameState === "result" && (
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full text-center">
+                        <div className="w-24 h-24 aura-gradient-primary rounded-4xl flex items-center justify-center mx-auto mb-8 text-white shadow-xl">
+                            <span className="text-3xl font-black">{Math.round((score / words.length) * 100)}%</span>
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">Well Done!</h2>
+                        <p className="text-slate-500 font-medium mb-12">
+                            You balanced {score} out of {words.length} items.
+                        </p>
+                        <button
+                            onClick={() => {
+                                setGameState("idle");
+                                setCurrentIndex(0);
+                                setScore(0);
+                                setTranscript("");
+                                setTimeLeft(responseTimer);
+                            }}
+                            className="w-full aura-gradient-primary text-white h-16 rounded-2xl font-black transition-all shadow-xl hover:scale-[1.02]"
+                        >
+                            Try Again
+                        </button>
+                    </motion.div>
+                )}
             </div>
         </div>
     );
