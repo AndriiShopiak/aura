@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Mic, BookOpen, Settings, ChevronRight, Activity, Zap, Play } from "lucide-react";
+import { Mic, BookOpen, Settings, ChevronRight, Activity, Zap, Play, Trophy } from "lucide-react";
 import Link from "next/link";
 import { Lesson } from "@/types";
 import Footer from "@/components/Footer";
@@ -45,13 +45,24 @@ export default function Home() {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-sky-100 mt-1 opacity-80">Speech App</span>
               </div>
             </div>
-            <Link
-              href="/admin"
-              className="px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white hover:text-sky-600 transition-all font-bold text-sm backdrop-blur-md flex items-center gap-2"
-            >
-              <Settings size={18} />
-              <span className="hidden sm:inline">For Teacher</span>
-            </Link>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/leaderboard"
+                className="px-5 py-2.5 rounded-xl bg-amber-400 border border-amber-500 text-amber-900 hover:bg-amber-300 transition-all font-black text-sm shadow-[0_4px_0_0_#B45309] active:shadow-none active:translate-y-1 flex items-center gap-2"
+              >
+                <Trophy size={18} />
+                <span>Stars</span>
+              </Link>
+
+              <Link
+                href="/admin"
+                className="px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white hover:text-sky-600 transition-all font-bold text-sm backdrop-blur-md flex items-center gap-2"
+              >
+                <Settings size={18} />
+                <span className="hidden sm:inline">Teacher</span>
+              </Link>
+            </div>
           </header>
 
           <motion.div
