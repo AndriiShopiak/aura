@@ -149,7 +149,7 @@ export default function QuestMapPage() {
                                                     transition={{ duration: 2, repeat: Infinity }}
                                                     className={`absolute -inset-4 bg-linear-to-br ${color} blur-2xl rounded-full`}
                                                 />
-                                                <div className={`w-20 h-20 sm:w-28 sm:h-28 rounded-4xl bg-white border-4 border-white shadow-2xl p-1 overflow-hidden relative group-hover:border-primary transition-colors`}>
+                                                <div className={`w-20 h-20 sm:w-30 sm:h-30 rounded-4xl bg-white border-4 border-white shadow-2xl p-4 overflow-hidden relative group-hover:border-primary transition-colors`}>
                                                     <div className={`w-full h-full rounded-3xl bg-linear-to-br ${color} opacity-10 absolute inset-0`} />
                                                     <img
                                                         src={animalImg}
@@ -158,10 +158,10 @@ export default function QuestMapPage() {
                                                     />
 
                                                     {/* Star Indicator */}
-                                                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5 z-20">
+                                                    <div className="absolute left-1/2 -translate-x-1/2 flex gap-0.5 z-21">
                                                         {[1, 2, 3].map(s => (
                                                             <Star
-                                                                size={12}
+                                                                size={15}
                                                                 key={s}
                                                                 className={`${s <= (lessonProgress?.stars || 0) ? 'text-amber-400 fill-current' : 'text-slate-300'}`}
                                                             />
