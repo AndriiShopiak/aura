@@ -1,19 +1,22 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mic, ArrowLeft, MicOff } from "lucide-react";
+import { Mic, ArrowLeft, MicOff, Map as MapIcon } from "lucide-react";
 import { Word } from "@/types";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { calculateStars, saveLessonProgress } from "@/lib/progress";
+import { Star as StarIcon } from "lucide-react";
 
 interface TrainerProps {
+    lessonId: string;
     title: string;
     words: Word[];
     responseTimer: number;
     onComplete?: (score: number) => void;
 }
 
-export default function Trainer({ title, words, responseTimer, onComplete }: TrainerProps) {
+export default function Trainer({ lessonId, title, words, responseTimer, onComplete }: TrainerProps) {
     const [gameState, setGameState] = useState<"idle" | "playing" | "result">("idle");
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
@@ -31,6 +34,7 @@ export default function Trainer({ title, words, responseTimer, onComplete }: Tra
     const isTransitioningRef = useRef(false);
     const currentIndexRef = useRef(0);
     const isCorrectRef = useRef(false);
+    const scoreRef = useRef(0);
 
     // Synchronize refs with state for use in async/closure-bound functions
     useEffect(() => {
@@ -40,6 +44,10 @@ export default function Trainer({ title, words, responseTimer, onComplete }: Tra
     useEffect(() => {
         isCorrectRef.current = isCorrect;
     }, [isCorrect]);
+
+    useEffect(() => {
+        scoreRef.current = score;
+    }, [score]);
 
     const stopListening = useCallback(() => {
         // Зупинка розпізнавання
@@ -78,9 +86,17 @@ export default function Trainer({ title, words, responseTimer, onComplete }: Tra
         } else {
             setGameState("result");
             stopListening();
+
+            // Calculate and save progress using Ref for latest value
+            const finalScore = scoreRef.current;
+            const maxScore = words.length;
+            const finalStars = calculateStars(finalScore, maxScore);
+            saveLessonProgress(lessonId, finalScore, finalStars);
+
+            if (onComplete) onComplete(finalScore);
             isTransitioningRef.current = false;
         }
-    }, [words.length, responseTimer, stopListening]);
+    }, [words.length, responseTimer, stopListening, lessonId, onComplete, score]);
 
     const startListening = useCallback(async () => {
         if (typeof window !== "undefined") {
@@ -329,6 +345,24 @@ export default function Trainer({ title, words, responseTimer, onComplete }: Tra
 
                 {gameState === "result" && (
                     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full text-center">
+                        <div className="flex justify-center gap-2 mb-6">
+                            {[1, 2, 3].map((star) => (
+                                <motion.div
+                                    key={star}
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: 0.2 + star * 0.1, type: "spring" }}
+                                >
+                                    <StarIcon
+                                        size={40}
+                                        className={`${star <= calculateStars(score, words.length)
+                                            ? "text-amber-400 fill-current"
+                                            : "text-slate-200"
+                                            } drop-shadow-lg`}
+                                    />
+                                </motion.div>
+                            ))}
+                        </div>
                         <div className="w-24 h-24 aura-gradient-primary rounded-4xl flex items-center justify-center mx-auto mb-8 text-white shadow-xl">
                             <span className="text-3xl font-black">{Math.round((score / words.length) * 100)}%</span>
                         </div>
@@ -336,18 +370,37 @@ export default function Trainer({ title, words, responseTimer, onComplete }: Tra
                         <p className="text-slate-500 font-medium mb-12">
                             You balanced {score} out of {words.length} items.
                         </p>
-                        <button
-                            onClick={() => {
-                                setGameState("idle");
-                                setCurrentIndex(0);
-                                setScore(0);
-                                setTranscript("");
-                                setTimeLeft(responseTimer);
-                            }}
-                            className="w-full aura-gradient-primary text-white h-16 rounded-2xl font-black transition-all shadow-xl hover:scale-[1.02]"
-                        >
-                            Try Again
-                        </button>
+                        <div className="flex flex-col gap-4 w-full">
+                            <button
+                                onClick={() => {
+                                    setGameState("idle");
+                                    setCurrentIndex(0);
+                                    setScore(0);
+                                    scoreRef.current = 0;
+                                    setTranscript("");
+                                    setTimeLeft(responseTimer);
+                                }}
+                                className="w-full aura-gradient-primary text-white h-16 rounded-2xl font-black transition-all shadow-xl hover:scale-[1.02] active:scale-95"
+                            >
+                                Try Again
+                            </button>
+
+                            <Link
+                                href="/map"
+                                className="w-full bg-sky-400 border-b-4 border-sky-600 text-sky-900 h-16 rounded-2xl font-black transition-all shadow-lg hover:bg-sky-300 flex items-center justify-center gap-2 active:translate-y-1 active:shadow-none"
+                            >
+                                <MapIcon size={20} />
+                                Back to Map
+                            </Link>
+
+                            <Link
+                                href="/"
+                                className="w-full bg-slate-100 text-slate-500 h-14 rounded-2xl font-bold transition-all hover:bg-slate-200 flex items-center justify-center gap-2"
+                            >
+                                <ArrowLeft size={16} />
+                                Dashboard
+                            </Link>
+                        </div>
                     </motion.div>
                 )}
             </div>

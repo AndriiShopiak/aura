@@ -52,6 +52,7 @@ export default function TrainPage() {
     return (
         <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-6">
             <Trainer
+                lessonId={id as string}
                 title={lesson.title}
                 words={lesson.words}
                 responseTimer={lesson.responseTimer || 6}

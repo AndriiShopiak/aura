@@ -2,10 +2,11 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Mic, BookOpen, Settings, ChevronRight, Activity, Zap, Play, Trophy } from "lucide-react";
+import { Mic, BookOpen, Settings, ChevronRight, Activity, Zap, Play, Trophy, Map as MapIcon, Star } from "lucide-react";
 import Link from "next/link";
 import { Lesson } from "@/types";
 import Footer from "@/components/Footer";
+import { getProgress, UserProgress } from "@/lib/progress";
 
 const ANIMAL_IMAGES = [
   "/animals/lion.png",
@@ -16,21 +17,23 @@ const ANIMAL_IMAGES = [
 
 export default function Home() {
   const [lessons, setLessons] = React.useState<Lesson[]>([]);
+  const [progress, setProgress] = React.useState<UserProgress | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const fetchLessons = async () => {
+    const fetchData = async () => {
       try {
         const res = await fetch("/api/lessons");
         const data = await res.json();
         setLessons(data);
+        setProgress(getProgress());
       } catch (err) {
         console.error("Failed to fetch lessons:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchLessons();
+    fetchData();
   }, []);
 
   return (
@@ -59,7 +62,15 @@ export default function Home() {
                 className="px-5 py-2.5 rounded-xl bg-amber-400 border border-amber-500 text-amber-900 hover:bg-amber-300 transition-all font-black text-sm shadow-[0_4px_0_0_#B45309] active:shadow-none active:translate-y-1 flex items-center gap-2"
               >
                 <Trophy size={18} />
-                <span>Stars</span>
+                <span>{progress?.totalStars || 0} Stars</span>
+              </Link>
+
+              <Link
+                href="/map"
+                className="px-5 py-2.5 rounded-xl bg-sky-400 border border-sky-500 text-sky-900 hover:bg-sky-300 transition-all font-black text-sm shadow-[0_4px_0_0_#0369a1] active:shadow-none active:translate-y-1 flex items-center gap-2"
+              >
+                <MapIcon size={18} />
+                <span>Map</span>
               </Link>
 
               <Link
@@ -162,6 +173,20 @@ export default function Home() {
                         <h3 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors truncate">
                           {lesson.title}
                         </h3>
+                      </div>
+
+                      {/* Stars Display */}
+                      <div className="flex gap-1 mb-4">
+                        {[1, 2, 3].map((s) => (
+                          <Star
+                            key={s}
+                            size={16}
+                            className={`${s <= (progress?.lessons[lesson.id]?.stars || 0)
+                                ? "text-amber-400 fill-current"
+                                : "text-slate-200"
+                              }`}
+                          />
+                        ))}
                       </div>
 
                       <p className="text-slate-500 text-sm leading-relaxed mb-8 grow font-medium group-hover:text-slate-700">
