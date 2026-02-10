@@ -14,3 +14,14 @@ export interface Lesson {
     responseTimer: number;
     words: Word[];
 }
+
+export interface LessonProgress {
+    completed: boolean;
+    stars: number;
+    score: number;
+}
+
+export interface UserProgress {
+    totalStars: number;
+    lessons: Record<string, LessonProgress>;
+}
