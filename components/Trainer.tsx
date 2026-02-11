@@ -17,7 +17,7 @@ interface TrainerProps {
 }
 
 export default function Trainer({ lessonId, title, words, responseTimer, onComplete }: TrainerProps) {
-    const [gameState, setGameState] = useState<"idle" | "playing" | "result">("idle");
+    const [gameState, setGameState] = useState<"playing" | "result">("playing");
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
     const [volume, setVolume] = useState(0);
@@ -35,6 +35,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
     const currentIndexRef = useRef(0);
     const isCorrectRef = useRef(false);
     const scoreRef = useRef(0);
+    const isMountedRef = useRef(true);
 
     // Synchronize refs with state for use in async/closure-bound functions
     useEffect(() => {
@@ -52,7 +53,12 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
     const stopListening = useCallback(() => {
         // Зупинка розпізнавання
         if (recognitionRef.current) {
-            recognitionRef.current.stop();
+            try {
+                recognitionRef.current.abort();
+            } catch (e) {
+                console.error("Error aborting recognition:", e);
+            }
+            recognitionRef.current = null;
         }
 
         // Очищення Audio API
@@ -61,7 +67,11 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
             animationFrameRef.current = null;
         }
         if (audioContextRef.current) {
-            audioContextRef.current.close();
+            try {
+                audioContextRef.current.close();
+            } catch (e) {
+                console.error("Error closing audio context:", e);
+            }
             audioContextRef.current = null;
         }
         if (streamRef.current) {
@@ -69,6 +79,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
             streamRef.current = null;
         }
         setVolume(0);
+        setIsListening(false);
     }, []);
 
     const handleNext = useCallback(() => {
@@ -142,6 +153,12 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
                 // 2. Налаштування Web Audio API для амплітуди
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                    if (!isMountedRef.current) {
+                        stream.getTracks().forEach(track => track.stop());
+                        return;
+                    }
+
                     streamRef.current = stream;
 
                     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -182,6 +199,13 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
         }
     }, [currentIndex, isCorrect, words, responseTimer, handleNext, stopListening]);
 
+
+    useEffect(() => {
+        if (gameState === "playing" && !isListening && !isCorrect) {
+            startListening();
+        }
+    }, [gameState, isListening, isCorrect, startListening]);
+
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (gameState === "playing" && isListening && !isCorrect) {
@@ -199,7 +223,9 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
     }, [gameState, isListening, isCorrect, handleNext, responseTimer]);
 
     useEffect(() => {
+        isMountedRef.current = true;
         return () => {
+            isMountedRef.current = false;
             stopListening();
         };
     }, [stopListening]);
@@ -219,23 +245,6 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
 
             {/* Main Content Area */}
             <div className={`p-10 relative z-10 min-h-[440px] flex flex-col items-center justify-center transition-colors duration-500 ${isCorrect ? 'bg-green-500/10' : ''}`}>
-                {gameState === "idle" && (
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full text-center">
-                        <div className="w-24 h-24 aura-gradient-primary rounded-4xl flex items-center justify-center mx-auto mb-8 shadow-xl text-white">
-                            <Mic size={40} />
-                        </div>
-                        <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Ready to Start?</h2>
-                        <p className="text-slate-500 font-medium mb-12 px-6 leading-relaxed">
-                            We are starting from scratch to build the perfect trainer.
-                        </p>
-                        <button
-                            onClick={() => setGameState("playing")}
-                            className="w-full aura-gradient-primary text-white h-16 rounded-2xl font-black transition-all shadow-xl hover:scale-[1.02] active:scale-95"
-                        >
-                            Start Fresh
-                        </button>
-                    </motion.div>
-                )}
 
                 {gameState === "playing" && (
                     <div className="w-full text-center flex flex-col items-center">
@@ -373,7 +382,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
                         <div className="flex flex-col gap-4 w-full">
                             <button
                                 onClick={() => {
-                                    setGameState("idle");
+                                    setGameState("playing");
                                     setCurrentIndex(0);
                                     setScore(0);
                                     scoreRef.current = 0;

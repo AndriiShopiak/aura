@@ -1,11 +1,14 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Lock, Star, Sparkles, Map as MapIcon, ChevronRight } from 'lucide-react'
+import React, { useEffect, useState, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowLeft, Star, Sparkles, Map as MapIcon, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { getProgress, UserProgress } from '@/lib/progress'
 import { Lesson } from '@/types'
+import { MapNode } from '@/components/features/map/MapNode'
+import { MapPath } from '@/components/features/map/MapPath'
+import { LessonSidebar } from '@/components/features/map/LessonSidebar'
 
 const ANIMAL_IMAGES = [
     "/animals/lion.png",
@@ -25,6 +28,8 @@ export default function QuestMapPage() {
     const [lessons, setLessons] = useState<Lesson[]>([])
     const [progress, setProgress] = useState<UserProgress | null>(null)
     const [loading, setLoading] = useState(true)
+    const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
+    const mapRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -32,7 +37,22 @@ export default function QuestMapPage() {
                 const res = await fetch('/api/lessons')
                 const data = await res.json()
                 setLessons(data)
-                setProgress(getProgress())
+                const userProgress = getProgress()
+                setProgress(userProgress)
+
+                // Find current lesson (first incomplete one)
+                const currentLesson = data.find((l: Lesson) => !userProgress.lessons[l.id]?.completed) || data[0]
+                if (currentLesson) {
+                    // Slight delay to ensure layout is ready
+                    setTimeout(() => {
+                        const index = data.indexOf(currentLesson)
+                        const pos = getNodePosition(index, data.length)
+                        if (mapRef.current) {
+                            const scrollY = (pos.y / 100) * mapRef.current.scrollHeight - window.innerHeight / 2
+                            mapRef.current.scrollTo({ top: scrollY, behavior: 'smooth' })
+                        }
+                    }, 500)
+                }
             } catch (err) {
                 console.error('Failed to fetch map data', err)
             } finally {
@@ -42,6 +62,14 @@ export default function QuestMapPage() {
         fetchData()
     }, [])
 
+    const getNodePosition = (index: number, total: number) => {
+        if (total <= 1) return { x: 50, y: 50 };
+        const zigZagX = [25, 75, 30, 70, 40, 60, 20, 80];
+        const x = zigZagX[index % zigZagX.length];
+        const y = 85 - (index * (75 / Math.max(1, total - 1)));
+        return { x, y };
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-sky-100">
@@ -50,145 +78,111 @@ export default function QuestMapPage() {
         )
     }
 
-    // Determine node positions on a custom curved path
-    const getNodePosition = (index: number, total: number) => {
-        if (total <= 1) return { x: 50, y: 50 };
-        // Example: Zig-zagging path from bottom to top
-        const zigZagX = [20, 70, 30, 80, 40, 90, 10, 60];
-        const x = zigZagX[index % zigZagX.length];
-        const y = 85 - (index * (75 / Math.max(1, total - 1)));
-        return { x, y };
-    };
+    const points = lessons.map((_, i) => getNodePosition(i, lessons.length))
 
     return (
-        <div className="min-h-screen bg-linear-to-b from-sky-300 via-emerald-100 to-orange-100 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 relative overflow-hidden font-sans">
-            {/* Background Decor */}
-            <div className="absolute top-20 left-10 w-64 h-64 bg-white/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 right-10 w-80 h-80 bg-yellow-200/20 rounded-full blur-3xl" />
+        <div className="min-h-screen bg-linear-to-b from-[#0c4a6e] via-[#075985] to-[#0ea5e9] dark:from-slate-950 dark:via-indigo-950 dark:to-slate-900 relative overflow-hidden font-sans">
+            {/* Sea Background Decor */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
+                {/* Animated Waves Surface */}
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+            </div>
+
+            {/* Background Glows (Nearby Islands) */}
+            <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-emerald-400/10 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-1/4 left-1/4 w-[700px] h-[700px] bg-amber-200/5 rounded-full blur-[150px]" />
+
+            {/* Animated Clouds/Mist */}
+            <motion.div
+                animate={{ x: [-200, 2000] }}
+                transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+                className="absolute top-10 pointer-events-none z-10 opacity-20"
+            >
+                <div className="w-96 h-32 bg-white blur-3xl rounded-full" />
+            </motion.div>
 
             {/* Header */}
-            <div className="relative z-20 p-6 flex justify-between items-center bg-white/30 backdrop-blur-md border-b border-white/20">
-                <Link href="/" className="p-3 bg-white rounded-2xl shadow-lg text-primary hover:scale-110 transition-transform">
+            <div className="fixed top-0 left-0 w-full z-40 p-4 sm:p-6 flex justify-between items-center backdrop-blur-md bg-[#0c4a6e]/40 border-b border-white/10">
+                <Link href="/" className="p-3 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl text-[#0c4a6e] hover:scale-110 transition-transform active:scale-95 border-b-4 border-slate-200">
                     <ArrowLeft size={24} />
                 </Link>
                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-amber-400 rounded-2xl shadow-lg border-b-4 border-amber-600">
+                    <div className="p-3 bg-amber-400 rounded-2xl shadow-lg border-b-4 border-amber-600 hidden sm:block">
                         <MapIcon size={24} className="text-amber-900" />
                     </div>
-                    <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Мапа Пригод</h1>
+                    <div className="flex flex-col text-left">
+                        <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">Морська Експедиція</h1>
+                        <span className="text-[10px] text-sky-200 font-bold uppercase tracking-widest hidden sm:block">Відкрий таємниці архіпелагу</span>
+                    </div>
                 </div>
-                <div className="bg-white px-5 py-2 rounded-2xl shadow-lg border-b-4 border-slate-200 flex items-center gap-2">
-                    <Star className="text-amber-400 fill-current" size={20} />
+                <div className="bg-amber-50/90 backdrop-blur-md px-5 py-2 rounded-2xl shadow-xl border-b-4 border-amber-200 flex items-center gap-2">
+                    <Star className="text-amber-500 fill-current" size={20} />
                     <span className="font-black text-amber-900">{progress?.totalStars || 0}</span>
                 </div>
             </div>
 
             {/* Map Container */}
-            <div className="relative max-w-4xl mx-auto h-[120vh] mt-8 px-4 py-20 overflow-y-auto">
-                {/* SVG Path Background */}
-                <svg
-                    className="absolute inset-0 w-full h-[120vh] pointer-events-none z-0"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                >
-                    {lessons.length > 1 && (
-                        <motion.path
-                            initial={{ pathLength: 0, opacity: 0 }}
-                            animate={{ pathLength: 1, opacity: 0.4 }}
-                            transition={{ duration: 2.5, ease: "easeInOut", delay: 0.5 }}
-                            d={lessons.reduce((acc, _, i) => {
-                                const pos = getNodePosition(i, lessons.length);
-                                if (i === 0) return `M ${pos.x} ${pos.y}`;
-                                // Adding a slight curve to the path
-                                const prevPos = getNodePosition(i - 1, lessons.length);
-                                const midX = (prevPos.x + pos.x) / 2;
-                                const midY = (prevPos.y + pos.y) / 2 + (i % 2 === 0 ? 5 : -5);
-                                return `${acc} Q ${midX} ${midY}, ${pos.x} ${pos.y}`;
-                            }, "")}
-                            fill="transparent"
-                            stroke="white"
-                            strokeWidth="1"
-                            strokeDasharray="2 3"
-                            strokeLinecap="round"
-                        />
+            <div
+                ref={mapRef}
+                className="relative h-screen overflow-y-auto pt-32 pb-40 px-4 custom-scrollbar scroll-smooth"
+            >
+                <div className="relative max-w-4xl mx-auto h-[120vh]">
+                    <MapPath points={points} />
+
+                    {lessons.map((lesson, index) => {
+                        const pos = getNodePosition(index, lessons.length);
+                        const lessonProgress = progress?.lessons[lesson.id];
+                        const isUnlocked = index === 0 || progress?.lessons[lessons[index - 1].id]?.completed;
+
+                        return (
+                            <MapNode
+                                key={lesson.id}
+                                lesson={lesson}
+                                index={index}
+                                pos={pos}
+                                isUnlocked={isUnlocked || false}
+                                isSelected={selectedLesson?.id === lesson.id}
+                                progress={lessonProgress}
+                                animalImg={ANIMAL_IMAGES[index % ANIMAL_IMAGES.length]}
+                                color={NODE_COLORS[index % NODE_COLORS.length]}
+                                onSelect={(l) => setSelectedLesson(l)}
+                            />
+                        );
+                    })}
+
+                    {lessons.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full">
+                            <Sparkles size={64} className="text-amber-400 mb-4 animate-bounce" />
+                            <h2 className="text-2xl font-black text-white tracking-tight">Поки немає островів!</h2>
+                            <p className="text-sky-200 font-medium">Зайди пізніше або створи свій перший урок.</p>
+                        </div>
                     )}
-                </svg>
-
-                {/* Nodes */}
-                {lessons.map((lesson, index) => {
-                    const pos = getNodePosition(index, lessons.length);
-                    const lessonProgress = progress?.lessons[lesson.id];
-                    const isUnlocked = index === 0 || progress?.lessons[lessons[index - 1].id]?.completed;
-                    const animalImg = ANIMAL_IMAGES[index % ANIMAL_IMAGES.length];
-                    const color = NODE_COLORS[index % NODE_COLORS.length];
-
-                    return (
-                        <motion.div
-                            key={lesson.id}
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ type: "spring", delay: index * 0.2 }}
-                            style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                            className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-                        >
-                            <div className="flex flex-col items-center">
-                                <Link href={isUnlocked ? `/train/${lesson.id}` : '#'}>
-                                    <motion.div
-                                        whileHover={isUnlocked ? { scale: 1.1, y: -5 } : {}}
-                                        whileTap={isUnlocked ? { scale: 0.95 } : {}}
-                                        className="relative group curso-pointer"
-                                    >
-                                        {!isUnlocked ? (
-                                            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-4xl bg-slate-300 border-4 border-slate-400 flex items-center justify-center p-4 grayscale opacity-80 shadow-inner">
-                                                <Lock size={32} className="text-slate-500" />
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <motion.div
-                                                    animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
-                                                    transition={{ duration: 2, repeat: Infinity }}
-                                                    className={`absolute -inset-4 bg-linear-to-br ${color} blur-2xl rounded-full`}
-                                                />
-                                                <div className={`w-20 h-20 sm:w-30 sm:h-30 rounded-4xl bg-white border-4 border-white shadow-2xl p-4 overflow-hidden relative group-hover:border-primary transition-colors`}>
-                                                    <div className={`w-full h-full rounded-3xl bg-linear-to-br ${color} opacity-10 absolute inset-0`} />
-                                                    <img
-                                                        src={animalImg}
-                                                        alt={lesson.title}
-                                                        className="w-full h-full object-contain relative z-10 drop-shadow-lg"
-                                                    />
-
-                                                    {/* Star Indicator */}
-                                                    <div className="absolute left-1/2 -translate-x-1/2 flex gap-0.5 z-21">
-                                                        {[1, 2, 3].map(s => (
-                                                            <Star
-                                                                size={15}
-                                                                key={s}
-                                                                className={`${s <= (lessonProgress?.stars || 0) ? 'text-amber-400 fill-current' : 'text-slate-300'}`}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
-                                    </motion.div>
-                                </Link>
-
-                                <div className={`mt-4 px-4 py-2 rounded-full font-black text-xs shadow-md border-b-4 whitespace-nowrap ${!isUnlocked ? 'bg-slate-200 text-slate-500 border-slate-400' : 'bg-white text-slate-900 border-slate-200'}`}>
-                                    {lesson.title}
-                                </div>
-                            </div>
-                        </motion.div>
-                    );
-                })}
-
-                {lessons.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full">
-                        <Sparkles size={64} className="text-amber-400 mb-4 animate-bounce" />
-                        <h2 className="text-2xl font-black text-slate-800 tracking-tight">Поки немає квестів!</h2>
-                        <p className="text-slate-500 font-medium">Зайди пізніше або створи свій перший урок.</p>
-                    </div>
-                )}
+                </div>
             </div>
+
+            {/* Details Sidebar */}
+            <LessonSidebar
+                lesson={selectedLesson}
+                progress={selectedLesson ? progress?.lessons[selectedLesson.id] : undefined}
+                isUnlocked={selectedLesson ? (lessons.indexOf(selectedLesson) === 0 || progress?.lessons[lessons[lessons.indexOf(selectedLesson) - 1].id]?.completed || false) : false}
+                onClose={() => setSelectedLesson(null)}
+            />
+
+            <style jsx global>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.1);
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                }
+            `}</style>
         </div>
     )
 }
