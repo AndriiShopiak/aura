@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
-        const { data, error } = await supabase
+        const { searchParams } = new URL(req.url);
+        const questId = searchParams.get("questId");
+
+        let query = supabase
             .from("lessons")
             .select("*, words(*)")
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: true });
+
+        if (questId) {
+            query = query.eq("quest_id", questId);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
@@ -24,7 +33,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { title, description, words, responseTimer, adminKey } = body;
+        const { title, description, words, responseTimer, questId, adminKey } = body;
 
         // Basic admin key validation
         if (!adminKey) {
@@ -38,7 +47,13 @@ export async function POST(req: NextRequest) {
         // 1. Insert lesson
         const { data: lesson, error: lessonError } = await supabase
             .from("lessons")
-            .insert([{ title, description, response_timer: responseTimer, icon: "🎓" }])
+            .insert([{
+                title,
+                description,
+                response_timer: responseTimer,
+                icon: "🎓",
+                quest_id: questId
+            }])
             .select()
             .single();
 

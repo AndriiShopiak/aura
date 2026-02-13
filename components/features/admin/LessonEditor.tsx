@@ -3,18 +3,20 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Type, AlignLeft, Clock, Info, LayoutDashboard, Plus, Trash2 } from "lucide-react";
-import { Word } from "@/types";
+import { Word, Quest } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-
 interface LessonEditorProps {
     title: string;
     description: string;
     responseTimer: number;
     words: Word[];
+    questId: string;
+    quests: Quest[];
     setTitle: (val: string) => void;
     setDescription: (val: string) => void;
     setResponseTimer: (val: number) => void;
+    setQuestId: (val: string) => void;
     addWord: () => void;
     removeWord: (idx: number) => void;
     updateWord: (idx: number, field: keyof Word, val: any) => void;
@@ -25,9 +27,12 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     description,
     responseTimer,
     words,
+    questId,
+    quests,
     setTitle,
     setDescription,
     setResponseTimer,
+    setQuestId,
     addWord,
     removeWord,
     updateWord,
@@ -40,6 +45,22 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                     <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-4 flex items-center gap-2">
                         <Sparkles size={16} className="text-amber-400" /> Lesson Settings
                     </h2>
+
+                    <div className="space-y-3">
+                        <label className="flex items-center gap-2 text-xs font-black text-slate-600 uppercase tracking-widest">
+                            <LayoutDashboard size={14} /> Assigned Quest
+                        </label>
+                        <select
+                            value={questId}
+                            onChange={(e) => setQuestId(e.target.value)}
+                            className="w-full h-14 bg-slate-50 border border-slate-100 rounded-xl px-5 focus:outline-none focus:border-sky-500 transition-all text-slate-900 font-bold appearance-none cursor-pointer"
+                        >
+                            <option value="">Select a Quest...</option>
+                            {quests.map(q => (
+                                <option key={q.id} value={q.id}>{q.title}</option>
+                            ))}
+                        </select>
+                    </div>
 
                     <div className="space-y-3">
                         <label className="flex items-center gap-2 text-xs font-black text-slate-600 uppercase tracking-widest">

@@ -13,6 +13,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
     const [description, setDescription] = useState("");
     const [responseTimer, setResponseTimer] = useState(6);
     const [words, setWords] = useState<Word[]>([{ value: "", word: "", alts: [] }]);
+    const [questId, setQuestId] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +23,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setDescription("");
         setResponseTimer(6);
         setWords([{ value: "", word: "", alts: [] }]);
+        setQuestId("");
         setError(null);
     }, []);
 
@@ -35,6 +37,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setDescription(lesson.description);
         setResponseTimer(lesson.responseTimer || 6);
         setWords(lesson.words && lesson.words.length > 0 ? [...lesson.words] : [{ value: "", word: "", alts: [] }]);
+        setQuestId(lesson.quest_id || "");
         setError(null);
     }, []);
 
@@ -44,6 +47,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setDescription(lesson.description);
         setResponseTimer(lesson.responseTimer || 6);
         setWords((lesson.words || []).map(w => ({ ...w, id: undefined })));
+        setQuestId(lesson.quest_id || "");
         setError(null);
     }, []);
 
@@ -64,18 +68,16 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
     }, []);
 
     const handleSave = useCallback(async () => {
-        if (!title || words.some(w => !w.word || !w.value)) {
-            alert("Please fill in all word fields and the lesson title.");
+        if (!title || !questId || words.some(w => !w.word || !w.value)) {
+            alert("Please fill in all word fields, lesson title, and select a quest.");
             return;
         }
 
         setIsSaving(true);
         setError(null);
         try {
-            const lessonData = { title, description, responseTimer, words };
+            const lessonData = { title, description, responseTimer, words, questId };
 
-            // We still use the API route for now as it handles the process.env.ADMIN_SECRET_KEY
-            // which is only available on the server.
             const method = editingId ? "PUT" : "POST";
             const url = editingId ? `/api/lessons/${editingId}` : "/api/lessons";
 
@@ -97,14 +99,15 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         } finally {
             setIsSaving(false);
         }
-    }, [editingId, title, description, responseTimer, words, adminKey, onSuccess]);
+    }, [editingId, title, description, responseTimer, words, questId, adminKey, onSuccess]);
 
     return {
-        state: { editingId, title, description, responseTimer, words, isSaving, error },
+        state: { editingId, title, description, responseTimer, words, questId, isSaving, error },
         actions: {
             setTitle,
             setDescription,
             setResponseTimer,
+            setQuestId,
             addWord,
             removeWord,
             updateWord,

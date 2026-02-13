@@ -5,8 +5,17 @@ export interface Word {
     alts?: string[];
 }
 
+export interface Quest {
+    id: string;
+    title: string;
+    description: string;
+    imageUrl?: string;
+    icon?: string;
+}
+
 export interface Lesson {
     id: string;
+    quest_id: string;
     title: string;
     description: string;
     icon?: string;

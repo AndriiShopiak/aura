@@ -48,7 +48,7 @@ export async function PUT(
     try {
         const { id } = await params;
         const body = await req.json();
-        const { title, description, words, responseTimer, adminKey } = body;
+        const { title, description, words, responseTimer, questId, adminKey } = body;
 
         if (!adminKey) {
             return NextResponse.json({ error: "Admin key is missing in request body" }, { status: 401 });
@@ -61,7 +61,12 @@ export async function PUT(
         // 1. Update lesson
         const { error: lessonError } = await supabase
             .from("lessons")
-            .update({ title, description, response_timer: responseTimer })
+            .update({
+                title,
+                description,
+                response_timer: responseTimer,
+                quest_id: questId
+            })
             .eq("id", id);
 
         if (lessonError) throw lessonError;

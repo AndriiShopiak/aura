@@ -4,8 +4,9 @@ import React, { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Star, Sparkles, Map as MapIcon, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { getProgress, UserProgress } from '@/lib/progress'
-import { Lesson } from '@/types'
+import { Lesson, Quest } from '@/types'
 import { MapNode } from '@/components/features/map/MapNode'
 import { MapPath } from '@/components/features/map/MapPath'
 import { LessonSidebar } from '@/components/features/map/LessonSidebar'
@@ -25,7 +26,11 @@ const NODE_COLORS = [
 ];
 
 export default function QuestMapPage() {
+    const searchParams = useSearchParams()
+    const questId = searchParams.get('questId')
+
     const [lessons, setLessons] = useState<Lesson[]>([])
+    const [quest, setQuest] = useState<Quest | null>(null)
     const [progress, setProgress] = useState<UserProgress | null>(null)
     const [loading, setLoading] = useState(true)
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
@@ -33,10 +38,24 @@ export default function QuestMapPage() {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!questId) {
+                setLoading(false)
+                return
+            }
+
             try {
-                const res = await fetch('/api/lessons')
+                // Fetch quest details
+                const questRes = await fetch(`/api/quests/${questId}`)
+                if (questRes.ok) {
+                    const questData = await questRes.json()
+                    setQuest(questData)
+                }
+
+                // Fetch filtered lessons
+                const res = await fetch(`/api/lessons?questId=${questId}`)
                 const data = await res.json()
                 setLessons(data)
+
                 const userProgress = getProgress()
                 setProgress(userProgress)
 
@@ -60,7 +79,7 @@ export default function QuestMapPage() {
             }
         }
         fetchData()
-    }, [])
+    }, [questId])
 
     const getNodePosition = (index: number, total: number) => {
         if (total <= 1) return { x: 50, y: 50 };
@@ -111,8 +130,12 @@ export default function QuestMapPage() {
                         <MapIcon size={24} className="text-amber-900" />
                     </div>
                     <div className="flex flex-col text-left">
-                        <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">Морська Експедиція</h1>
-                        <span className="text-[10px] text-sky-200 font-bold uppercase tracking-widest hidden sm:block">Відкрий таємниці архіпелагу</span>
+                        <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">
+                            {quest ? quest.title : "Морська Експедиція"}
+                        </h1>
+                        <span className="text-[10px] text-sky-200 font-bold uppercase tracking-widest hidden sm:block">
+                            {quest ? quest.description : "Відкрий таємниці архіпелагу"}
+                        </span>
                     </div>
                 </div>
                 <div className="bg-amber-50/90 backdrop-blur-md px-5 py-2 rounded-2xl shadow-xl border-b-4 border-amber-200 flex items-center gap-2">

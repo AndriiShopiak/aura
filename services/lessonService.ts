@@ -2,11 +2,17 @@ import { supabase } from "@/lib/supabase";
 import { Lesson, Word } from "@/types";
 
 export const lessonService = {
-    async getLessons(): Promise<Lesson[]> {
-        const { data, error } = await supabase
+    async getLessons(questId?: string): Promise<Lesson[]> {
+        let query = supabase
             .from("lessons")
             .select("*, words(*)")
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: true });
+
+        if (questId) {
+            query = query.eq("quest_id", questId);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
@@ -45,11 +51,17 @@ export const lessonService = {
     },
 
     async createLesson(lessonData: Omit<Lesson, "id">): Promise<string> {
-        const { title, description, responseTimer, words } = lessonData;
+        const { title, description, responseTimer, words, quest_id } = lessonData;
 
         const { data: lesson, error: lessonError } = await supabase
             .from("lessons")
-            .insert([{ title, description, response_timer: responseTimer, icon: "🎓" }])
+            .insert([{
+                title,
+                description,
+                response_timer: responseTimer,
+                icon: "🎓",
+                quest_id
+            }])
             .select()
             .single();
 
@@ -72,11 +84,16 @@ export const lessonService = {
     },
 
     async updateLesson(id: string, lessonData: Omit<Lesson, "id">): Promise<void> {
-        const { title, description, responseTimer, words } = lessonData;
+        const { title, description, responseTimer, words, quest_id } = lessonData;
 
         const { error: lessonError } = await supabase
             .from("lessons")
-            .update({ title, description, response_timer: responseTimer })
+            .update({
+                title,
+                description,
+                response_timer: responseTimer,
+                quest_id
+            })
             .eq("id", id);
 
         if (lessonError) throw lessonError;

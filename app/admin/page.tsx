@@ -4,13 +4,18 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, LogOut, Plus, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useLessons } from "@/hooks/useLessons";
+import { useQuests } from "@/hooks/useQuests";
 import { useAdminEditor } from "@/hooks/useAdminEditor";
+import { useQuestEditor } from "@/hooks/useQuestEditor";
 import { authService } from "@/services/authService";
 import { lessonService } from "@/services/lessonService";
+import { questService } from "@/services/questService";
 import { Button } from "@/components/ui/Button";
 import { AdminLogin } from "@/components/features/admin/AdminLogin";
 import { AdminDashboard } from "@/components/features/admin/AdminDashboard";
 import { LessonEditor } from "@/components/features/admin/LessonEditor";
+import { QuestDashboard } from "@/components/features/admin/QuestDashboard";
+import { QuestEditor } from "@/components/features/admin/QuestEditor";
 
 export default function AdminPage() {
     const [isAuthorized, setIsAuthorized] = useState(false);
@@ -18,14 +23,24 @@ export default function AdminPage() {
     const [authError, setAuthError] = useState("");
     const [isCheckingAuth, setIsCheckingAuth] = useState(false);
     const [view, setView] = useState<"dashboard" | "editor">("dashboard");
+    const [adminMode, setAdminMode] = useState<"lessons" | "quests">("lessons");
 
     const { lessons, isLoading: isLoadingLessons, refreshLessons } = useLessons();
+    const { quests, isLoading: isLoadingQuests, refreshQuests } = useQuests();
 
     const { state: editorState, actions: editorActions } = useAdminEditor({
         adminKey,
         onSuccess: () => {
             setView("dashboard");
             refreshLessons();
+        }
+    });
+
+    const { state: questEditorState, actions: questEditorActions } = useQuestEditor({
+        adminKey,
+        onSuccess: () => {
+            setView("dashboard");
+            refreshQuests();
         }
     });
 
@@ -49,12 +64,26 @@ export default function AdminPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this lesson?")) return;
+        const itemType = adminMode === "lessons" ? "lesson" : "quest";
+        if (!confirm(`Are you sure you want to delete this ${itemType}?`)) return;
         try {
-            await lessonService.deleteLesson(id);
-            refreshLessons();
+            if (adminMode === "lessons") {
+                await lessonService.deleteLesson(id);
+                refreshLessons();
+            } else {
+                await questService.deleteQuest(id);
+                refreshQuests();
+            }
         } catch (err) {
-            alert("Error deleting lesson.");
+            alert(`Error deleting ${itemType}.`);
+        }
+    };
+
+    const handleSave = () => {
+        if (adminMode === "lessons") {
+            editorActions.handleSave();
+        } else {
+            questEditorActions.handleSave();
         }
     };
 
@@ -69,6 +98,21 @@ export default function AdminPage() {
             />
         );
     }
+
+    const currentTitle = view === "dashboard"
+        ? "Tutor Dashboard"
+        : adminMode === "lessons"
+            ? (editorState.editingId ? "Edit Lesson" : "New Lesson")
+            : (questEditorState.editingQuestId ? "Edit Quest" : "New Quest");
+
+    const handleCreateNew = () => {
+        if (adminMode === "lessons") {
+            editorActions.startCreate();
+        } else {
+            questEditorActions.startCreate();
+        }
+        setView("editor");
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 pb-24 selection:bg-sky-100 selection:text-sky-900">
@@ -92,30 +136,47 @@ export default function AdminPage() {
                                 )}
                             </div>
                             <h1 className="text-4xl font-black tracking-tight leading-none">
-                                {view === "dashboard" ? "Tutor Dashboard" : editorState.editingId ? "Edit Lesson" : "New Lesson"}
+                                {currentTitle}
                             </h1>
                         </div>
+
+                        {view === "dashboard" && (
+                            <div className="flex bg-white/10 p-1 rounded-2xl backdrop-blur-sm border border-white/10">
+                                <button
+                                    onClick={() => setAdminMode("lessons")}
+                                    className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${adminMode === "lessons" ? "bg-white text-primary shadow-lg" : "text-white/70 hover:text-white"}`}
+                                >
+                                    Lessons
+                                </button>
+                                <button
+                                    onClick={() => setAdminMode("quests")}
+                                    className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${adminMode === "quests" ? "bg-white text-primary shadow-lg" : "text-white/70 hover:text-white"}`}
+                                >
+                                    Quests
+                                </button>
+                            </div>
+                        )}
+
                         {view === "dashboard" ? (
                             <Button
-                                onClick={() => {
-                                    editorActions.startCreate();
-                                    setView("editor");
-                                }}
+                                onClick={handleCreateNew}
                                 variant="secondary"
                                 size="xl"
                                 leftIcon={<Plus size={20} />}
                             >
-                                Create New Lesson
+                                {adminMode === "lessons" ? "Create Lesson" : "Create Quest"}
                             </Button>
                         ) : (
                             <Button
-                                onClick={editorActions.handleSave}
-                                isLoading={editorState.isSaving}
+                                onClick={handleSave}
+                                isLoading={adminMode === "lessons" ? editorState.isSaving : questEditorState.isSaving}
                                 variant="secondary"
                                 size="xl"
                                 leftIcon={<Save size={20} />}
                             >
-                                {editorState.editingId ? "Update Lesson" : "Publish Lesson"}
+                                {adminMode === "lessons"
+                                    ? (editorState.editingId ? "Update Lesson" : "Publish Lesson")
+                                    : (questEditorState.editingQuestId ? "Update Quest" : "Create Quest")}
                             </Button>
                         )}
                     </header>
@@ -124,28 +185,46 @@ export default function AdminPage() {
 
             <div className="max-w-6xl mx-auto px-6">
                 {view === "dashboard" ? (
-                    <AdminDashboard
-                        lessons={lessons}
-                        isLoading={isLoadingLessons}
-                        onEdit={(lesson) => {
-                            editorActions.startEdit(lesson);
-                            setView("editor");
-                        }}
-                        onDuplicate={(lesson) => {
-                            editorActions.startDuplicate(lesson);
-                            setView("editor");
-                        }}
-                        onDelete={handleDelete}
-                        onCreateNew={() => {
-                            editorActions.startCreate();
-                            setView("editor");
-                        }}
-                    />
+                    adminMode === "lessons" ? (
+                        <AdminDashboard
+                            lessons={lessons}
+                            isLoading={isLoadingLessons}
+                            onEdit={(lesson) => {
+                                editorActions.startEdit(lesson);
+                                setView("editor");
+                            }}
+                            onDuplicate={(lesson) => {
+                                editorActions.startDuplicate(lesson);
+                                setView("editor");
+                            }}
+                            onDelete={handleDelete}
+                            onCreateNew={handleCreateNew}
+                        />
+                    ) : (
+                        <QuestDashboard
+                            quests={quests}
+                            isLoading={isLoadingQuests}
+                            onEdit={(quest) => {
+                                questEditorActions.startEdit(quest);
+                                setView("editor");
+                            }}
+                            onDelete={handleDelete}
+                            onCreateNew={handleCreateNew}
+                        />
+                    )
                 ) : (
-                    <LessonEditor
-                        {...editorState}
-                        {...editorActions}
-                    />
+                    adminMode === "lessons" ? (
+                        <LessonEditor
+                            {...editorState}
+                            {...editorActions}
+                            quests={quests}
+                        />
+                    ) : (
+                        <QuestEditor
+                            {...questEditorState}
+                            {...questEditorActions}
+                        />
+                    )
                 )}
             </div>
         </div>

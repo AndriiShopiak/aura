@@ -6,11 +6,11 @@ import { getProgress, UserProgress } from "@/lib/progress";
 import Footer from "@/components/Footer";
 import { Header } from "@/components/layout/Header";
 import { Hero } from "@/components/features/lessons/Hero";
-import { LessonGrid } from "@/components/features/lessons/LessonGrid";
-import { useLessons } from "@/hooks/useLessons";
+import { QuestGrid } from "@/components/features/quests/QuestGrid";
+import { useQuests } from "@/hooks/useQuests";
 
 export default function Home() {
-  const { lessons, isLoading } = useLessons();
+  const { quests, isLoading } = useQuests();
   const [progress, setProgress] = useState<UserProgress | null>(null);
 
   useEffect(() => {
@@ -38,12 +38,12 @@ export default function Home() {
               <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-sky-600">
                 <BookOpen size={20} />
               </div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Your Quests</h2>
             </div>
           </div>
 
-          <LessonGrid
-            lessons={lessons}
-            progress={progress}
+          <QuestGrid
+            quests={quests}
             isLoading={isLoading}
           />
         </section>
