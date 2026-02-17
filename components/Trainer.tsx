@@ -86,28 +86,29 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
         if (isTransitioningRef.current) return;
         isTransitioningRef.current = true;
 
-        if (currentIndexRef.current < words.length - 1) {
-            setTimeout(() => {
+        setTimeout(() => {
+            if (currentIndexRef.current < words.length - 1) {
                 setCurrentIndex(prev => prev + 1);
                 setTimeLeft(responseTimer);
                 setIsCorrect(false);
                 setTranscript("");
                 isTransitioningRef.current = false;
-            }, 1000);
-        } else {
-            setGameState("result");
-            stopListening();
+            } else {
+                setGameState("result");
+                stopListening();
 
-            // Calculate and save progress using Ref for latest value
-            const finalScore = scoreRef.current;
-            const maxScore = words.length;
-            const finalStars = calculateStars(finalScore, maxScore);
-            saveLessonProgress(lessonId, finalScore, finalStars);
+                // Calculate and save progress using Ref for latest value
+                const finalScore = scoreRef.current;
+                const maxScore = words.length;
+                const finalStars = calculateStars(finalScore, maxScore);
 
-            if (onComplete) onComplete(finalScore);
-            isTransitioningRef.current = false;
-        }
-    }, [words.length, responseTimer, stopListening, lessonId, onComplete, score]);
+                saveLessonProgress(lessonId, finalScore, finalStars);
+
+                if (onComplete) onComplete(finalScore);
+                isTransitioningRef.current = false;
+            }
+        }, 1000);
+    }, [words.length, responseTimer, stopListening, lessonId, onComplete]);
 
     const startListening = useCallback(async () => {
         if (typeof window !== "undefined") {
@@ -140,7 +141,11 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
                         if (spoke === target || spoke.includes(target) || alts.some(a => spoke === a || spoke.includes(a))) {
                             if (isCorrectRef.current) return;
                             setIsCorrect(true);
-                            setScore(s => s + 1);
+                            setScore(s => {
+                                const newScore = s + 1;
+                                scoreRef.current = newScore; // Синхронно оновлюємо ref перед handleNext
+                                return newScore;
+                            });
                             handleNext();
                             return;
                         }
