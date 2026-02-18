@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Star, Sparkles, Map as MapIcon, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -25,7 +25,7 @@ const NODE_COLORS = [
     'from-emerald-400 to-teal-500',
 ];
 
-export default function QuestMapPage() {
+function MapContent() {
     const searchParams = useSearchParams()
     const questId = searchParams.get('questId')
 
@@ -91,8 +91,8 @@ export default function QuestMapPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-sky-100">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-sky-100 dark:bg-slate-900">
+                <div className="w-16 h-16 border-4 border-[#0ea5e9] border-t-transparent rounded-full animate-spin" />
             </div>
         )
     }
@@ -206,5 +206,17 @@ export default function QuestMapPage() {
                 }
             `}</style>
         </div>
+    )
+}
+
+export default function QuestMapPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-sky-100 dark:bg-slate-900">
+                <div className="w-16 h-16 border-4 border-[#0ea5e9] border-t-transparent rounded-full animate-spin" />
+            </div>
+        }>
+            <MapContent />
+        </Suspense>
     )
 }

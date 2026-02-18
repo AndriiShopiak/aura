@@ -3,10 +3,10 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         const { data, error } = await supabase
             .from("quests")
             .select("*")
@@ -25,10 +25,10 @@ export async function GET(
 
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         const { title, description, icon, adminKey } = await req.json();
 
         if (adminKey !== process.env.ADMIN_SECRET_KEY) {
@@ -49,10 +49,10 @@ export async function PUT(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         const { adminKey } = await req.json();
 
         if (adminKey !== process.env.ADMIN_SECRET_KEY) {
