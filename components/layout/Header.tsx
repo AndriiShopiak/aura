@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ progress }) => {
 
             <div className="flex items-center gap-3">
                 <Button
-                    href="/leaderboard"
+                    href="#"
                     variant="amber"
                     leftIcon={<Trophy size={18} />}
                 >
@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ progress }) => {
                 </Button>
 
                 <Button
-                    href="/map"
+                    href="#"
                     variant="sky"
                     leftIcon={<MapIcon size={18} />}
                 >
