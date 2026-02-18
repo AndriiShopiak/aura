@@ -22,8 +22,8 @@ export const QuestGrid: React.FC<QuestGridProps> = ({ quests, isLoading }) => {
 
     if (quests.length === 0) {
         return (
-            <div className="text-center py-24 aura-card bg-white/50 backdrop-blur-sm border-dashed border-sky-200">
-                <p className="text-slate-400 font-bold text-lg mb-6">No quests available yet.</p>
+            <div className="text-center py-24 aura-card">
+                <p className="text-slate-600 font-bold text-lg mb-6">No quests available yet.</p>
             </div>
         );
     }
