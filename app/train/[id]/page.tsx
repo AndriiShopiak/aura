@@ -43,7 +43,7 @@ export default function TrainPage() {
                 <h2 className="text-2xl font-bold text-neutral-800 mb-4">Lesson not found</h2>
                 <Link href="/" className="text-indigo-600 font-bold hover:underline flex items-center gap-2">
                     <ArrowLeft size={16} />
-                    Back to Dashboard
+                    Back to Home
                 </Link>
             </div>
         );

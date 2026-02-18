@@ -59,9 +59,6 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, index }) => {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-primary transition-colors">
                             Explore Quest
                         </span>
-                        <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:aura-gradient-primary flex items-center justify-center text-slate-400 group-hover:text-white transition-all shadow-sm group-hover:shadow-primary/30">
-                            <ChevronRight size={18} />
-                        </div>
                     </div>
                 </div>
             </Card>

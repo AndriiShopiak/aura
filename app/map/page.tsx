@@ -175,7 +175,6 @@ export default function QuestMapPage() {
 
                     {lessons.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-full">
-                            <Sparkles size={64} className="text-amber-400 mb-4 animate-bounce" />
                             <h2 className="text-2xl font-black text-white tracking-tight">Поки немає островів!</h2>
                             <p className="text-sky-200 font-medium">Зайди пізніше або створи свій перший урок.</p>
                         </div>

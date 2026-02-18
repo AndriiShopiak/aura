@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Star as StarIcon, Map as MapIcon, ArrowLeft } from "lucide-react";
 import { calculateStars } from "@/lib/progress";
 
@@ -12,6 +13,7 @@ interface ResultViewProps {
 }
 
 export function ResultView({ score, totalWords, onRetry }: ResultViewProps) {
+    const router = useRouter();
     const stars = calculateStars(score, totalWords);
 
     return (
@@ -49,13 +51,13 @@ export function ResultView({ score, totalWords, onRetry }: ResultViewProps) {
                     Try Again
                 </button>
 
-                <Link
-                    href="/map"
-                    className="w-full bg-sky-400 border-b-4 border-sky-600 text-sky-900 h-16 rounded-2xl font-black transition-all shadow-lg hover:bg-sky-300 flex items-center justify-center gap-2 active:translate-y-1 active:shadow-none"
+                <button
+                    onClick={() => router.back()}
+                    className="w-full bg-sky-400 border-b-4 border-sky-600 text-sky-900 h-16 rounded-2xl font-black transition-all shadow-lg hover:bg-sky-300 flex items-center justify-center gap-2 active:translate-y-1 active:shadow-none cursor-pointer"
                 >
                     <MapIcon size={20} />
                     Back to Map
-                </Link>
+                </button>
 
                 <Link
                     href="/"
