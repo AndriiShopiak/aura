@@ -106,31 +106,6 @@ export function PlayingView({
                     {words[currentIndex]?.value}
                 </h3>
             </div>
-
-            <div className="w-full min-h-[100px] p-6 rounded-2xl bg-white/50 border border-slate-100 mb-8 flex flex-col items-center justify-center backdrop-blur-sm">
-                {transcript ? (
-                    <p className="text-xl font-bold text-slate-800 italic">"{transcript}"</p>
-                ) : (
-                    <p className="text-slate-400 font-medium italic">Listening...</p>
-                )}
-            </div>
-
-            {isListening ? (
-                <button
-                    onClick={onStopListening}
-                    className="px-8 h-12 bg-rose-50 text-rose-600 rounded-xl font-black text-sm transition-all hover:bg-rose-100 flex items-center gap-2"
-                >
-                    <MicOff size={16} />
-                    Stop Listening
-                </button>
-            ) : (
-                <button
-                    onClick={onStartListening}
-                    className="px-8 h-12 aura-gradient-primary text-white rounded-xl font-black text-sm transition-all shadow-lg hover:shadow-xl hover:scale-105"
-                >
-                    Activate Microphone
-                </button>
-            )}
         </div>
     );
 }

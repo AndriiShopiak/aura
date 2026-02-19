@@ -32,11 +32,11 @@ export function IdleView({ title, wordCount, onStart }: IdleViewProps) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onStart}
-                className="group relative px-10 h-16 aura-gradient-primary text-white rounded-2xl font-black text-lg transition-all shadow-xl hover:shadow-2xl flex items-center gap-3"
+                className="group relative px-10 h-16 aura-gradient-primary text-white rounded-2xl font-black text-sm transition-all shadow-xl hover:shadow-2xl flex items-center gap-3"
             >
-                <Play size={24} fill="currentColor" />
+                <Play size={15} fill="currentColor" />
                 Start Lesson & Mic
-                <div className="absolute -inset-1 bg-linear-to-r from-blue-400 to-indigo-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity" />
+                <div className="absolute -inset- rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity" />
             </motion.button>
 
             <p className="mt-8 text-[10px] font-bold uppercase tracking-widest text-slate-400 max-w-[200px]">
