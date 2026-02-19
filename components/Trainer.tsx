@@ -7,6 +7,7 @@ import { useTrainerLogic } from "@/hooks/useTrainerLogic";
 import { TrainerHeader } from "./trainer/TrainerHeader";
 import { PlayingView } from "./trainer/PlayingView";
 import { ResultView } from "./trainer/ResultView";
+import { IdleView } from "./trainer/IdleView";
 
 interface TrainerProps {
     lessonId: string;
@@ -25,6 +26,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
         isCorrect,
         triggerMatch,
         reset,
+        startLesson,
     } = useTrainerLogic({
         lessonId,
         words,
@@ -47,6 +49,11 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
         onMatch: triggerMatch,
     });
 
+    const handleStart = useCallback(() => {
+        startSpeech();
+        startLesson();
+    }, [startSpeech, startLesson]);
+
     // Automatically manage speech recognition based on game state
     useEffect(() => {
         if (gameState === "playing" && !isListening && !isCorrect) {
@@ -66,6 +73,14 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
             <TrainerHeader title={title} />
 
             <div className={`p-10 relative z-10 min-h-[440px] flex flex-col items-center justify-center transition-colors duration-500 ${isCorrect ? 'bg-green-500/10' : ''}`}>
+                {gameState === "idle" && (
+                    <IdleView
+                        title={title}
+                        wordCount={words.length}
+                        onStart={handleStart}
+                    />
+                )}
+
                 {gameState === "playing" && (
                     <PlayingView
                         words={words}
@@ -92,3 +107,4 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
         </div>
     );
 }
+

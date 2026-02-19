@@ -17,7 +17,7 @@ export function useTrainerLogic({
     responseTimer,
     onComplete,
 }: UseTrainerLogicOptions) {
-    const [gameState, setGameState] = useState<"playing" | "result">("playing");
+    const [gameState, setGameState] = useState<"idle" | "playing" | "result">("idle");
     const [currentIndex, setCurrentIndex] = useState(0);
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(responseTimer);
@@ -35,6 +35,11 @@ export function useTrainerLogic({
     useEffect(() => {
         scoreRef.current = score;
     }, [score]);
+
+    const startLesson = useCallback(() => {
+        setGameState("playing");
+        setTimeLeft(responseTimer);
+    }, [responseTimer]);
 
     const handleNext = useCallback(() => {
         if (isTransitioningRef.current) return;
@@ -72,7 +77,7 @@ export function useTrainerLogic({
     }, [handleNext]);
 
     const reset = useCallback(() => {
-        setGameState("playing");
+        setGameState("idle");
         setCurrentIndex(0);
         setScore(0);
         scoreRef.current = 0;
@@ -106,6 +111,8 @@ export function useTrainerLogic({
         isCorrect,
         triggerMatch,
         reset,
-        setIsCorrect
+        setIsCorrect,
+        startLesson
     };
 }
+
