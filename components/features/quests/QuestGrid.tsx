@@ -34,7 +34,6 @@ export const QuestGrid: React.FC<QuestGridProps> = ({ quests, isLoading }) => {
                 <QuestCard
                     key={quest.id}
                     quest={quest}
-                    index={index}
                 />
             ))}
         </div>

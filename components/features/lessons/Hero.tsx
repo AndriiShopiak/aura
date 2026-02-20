@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export const Hero: React.FC = () => {
     return (
@@ -21,17 +22,14 @@ export const Hero: React.FC = () => {
             </div>
 
             <div className="flex justify-center items-center relative">
-                <motion.div
-                    animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="relative z-10"
-                >
-                    <img
-                        src="/animals/lion.png"
-                        alt="Friendly Lion Cub"
-                        className="w-full max-w-[400px] h-auto drop-shadow-3xl"
-                    />
-                </motion.div>
+                <Image
+                    src="/animals/lion.png"
+                    alt="Friendly Lion Cub"
+                    width={500}
+                    height={500}
+                    className="w-full max-w-[300px] rounded-2xl h-auto drop-shadow-3xl z-10"
+                    priority
+                />
 
                 {/* Magical sparkles/blobs behind the animal */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-300/30 rounded-full blur-[80px] z-0" />

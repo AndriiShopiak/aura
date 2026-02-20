@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="auraGradient" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#7C3AED" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="coloredBlur" />
+      <feMerge>
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <rect width="256" height="256" rx="60" fill="url(#auraGradient)" />
+  
+  <g filter="url(#glow)" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Abstract representation of sound waves / Aura -->
+    <path d="M68 128 L68 128" opacity="0.6"/>
+    <path d="M98 100 L98 156" />
+    <path d="M128 70 L128 186" />
+    <path d="M158 100 L158 156" />
+    <path d="M188 128 L188 128" opacity="0.6"/>
+  </g>
+</svg>
