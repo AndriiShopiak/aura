@@ -31,11 +31,30 @@ export function PlayingView({
 }: PlayingViewProps) {
     return (
         <div className="w-full text-center flex flex-col items-center">
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-8">
-                Step 1: Speech Recognition
-            </p>
+            {/* 1. Target Word & Image (Top Priority) */}
+            <div className="mb-10 w-full">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-4">
+                    Say this word:
+                    <span className="ml-2 text-slate-300">({currentIndex + 1}/{words.length})</span>
+                </p>
+                <div className="flex flex-col items-center gap-6">
+                    {words[currentIndex]?.imageUrl && (
+                        <div className="w-full h-48 flex items-center justify-center bg-white/50 rounded-3xl border border-white/40 shadow-inner overflow-hidden">
+                            <img
+                                src={words[currentIndex].imageUrl}
+                                alt="Target visual"
+                                className="max-h-full max-w-full object-contain p-4"
+                            />
+                        </div>
+                    )}
+                    <h3 className="text-4xl font-black text-slate-800 tracking-tight">
+                        {words[currentIndex]?.value}
+                    </h3>
+                </div>
+            </div>
 
-            <div className="relative mb-12">
+            {/* 2. Microphone Interaction */}
+            <div className="relative mb-8">
                 <AnimatePresence mode="wait">
                     {isListening ? (
                         <motion.div
@@ -51,7 +70,7 @@ export function PlayingView({
                                     backgroundColor: isCorrect ? "#22c55e" : "#5d5dff"
                                 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                className="w-24 h-24 rounded-4xl flex items-center justify-center shadow-xl text-white z-10 relative"
+                                className="w-20 h-20 rounded-4xl flex items-center justify-center shadow-xl text-white z-10 relative"
                             >
                                 <Mic size={40} />
                             </motion.div>
@@ -79,7 +98,12 @@ export function PlayingView({
                 </AnimatePresence>
             </div>
 
-            <div className="w-full mb-8">
+            {/* 3. Status Label & Progress */}
+            <div className="w-full">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-6">
+                    Step 1: Speech Recognition
+                </p>
+
                 <div className="flex justify-between items-center mb-2 px-1">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                         Time Remaining
@@ -94,27 +118,6 @@ export function PlayingView({
                         animate={{ width: `${(timeLeft / responseTimer) * 100}%` }}
                         className={`h-full ${timeLeft <= 3 ? 'bg-rose-500' : 'bg-blue-500'}`}
                     />
-                </div>
-            </div>
-
-            <div className="mb-8">
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-2">
-                    Say this word:
-                    <span className="ml-2 text-slate-300">({currentIndex + 1}/{words.length})</span>
-                </p>
-                <div className="flex flex-col items-center gap-6">
-                    {words[currentIndex]?.imageUrl && (
-                        <div className="w-full h-48 flex items-center justify-center bg-white/50 rounded-3xl border border-white/40 shadow-inner overflow-hidden">
-                            <img
-                                src={words[currentIndex].imageUrl}
-                                alt="Target visual"
-                                className="max-h-full max-w-full object-contain p-4"
-                            />
-                        </div>
-                    )}
-                    <h3 className="text-4xl font-black text-slate-800 tracking-tight">
-                        {words[currentIndex]?.value}
-                    </h3>
                 </div>
             </div>
         </div>
