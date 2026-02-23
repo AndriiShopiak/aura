@@ -2,8 +2,9 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Type, AlignLeft, Clock, Info, LayoutDashboard, Plus, Trash2 } from "lucide-react";
+import { Sparkles, Type, AlignLeft, Clock, Info, LayoutDashboard, Plus, Trash2, Image as ImageIcon, FileText, Upload, Loader2 } from "lucide-react";
 import { Word, Quest } from "@/types";
+import { storageService } from "@/services/storageService";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 interface LessonEditorProps {
@@ -142,14 +143,73 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                                     </div>
 
                                     <div className="grow grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em] pl-1">Visual Value</label>
-                                            <input
-                                                value={word.value}
-                                                onChange={(e) => updateWord(i, "value", e.target.value)}
-                                                placeholder="e.g. One"
-                                                className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all font-black text-slate-900"
-                                            />
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center pl-1">
+                                                <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em]">Visual Value</label>
+                                                <div className="flex border border-slate-100 rounded-lg p-0.5 bg-slate-50">
+                                                    <button
+                                                        onClick={() => updateWord(i, "type", "text")}
+                                                        className={`p-1 rounded-md transition-all ${(!word.type || word.type === 'text') ? 'bg-white shadow-sm text-sky-500' : 'text-slate-400 hover:text-slate-600'}`}
+                                                        title="Text Mode"
+                                                    >
+                                                        <FileText size={12} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => updateWord(i, "type", "image")}
+                                                        className={`p-1 rounded-md transition-all ${word.type === 'image' ? 'bg-white shadow-sm text-sky-500' : 'text-slate-400 hover:text-slate-600'}`}
+                                                        title="Image Mode"
+                                                    >
+                                                        <ImageIcon size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {word.type === "image" ? (
+                                                <div className="flex flex-col gap-3">
+                                                    {word.value && word.value.startsWith('http') ? (
+                                                        <div className="relative group/img w-full h-32 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center">
+                                                            <img src={word.value} alt="Preview" className="h-full w-full object-contain" />
+                                                            <button
+                                                                onClick={() => updateWord(i, "value", "")}
+                                                                className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest gap-2"
+                                                            >
+                                                                <Trash2 size={14} /> Remove Image
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <label className="w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-sky-300 hover:bg-sky-50 transition-all cursor-pointer group">
+                                                            <input
+                                                                type="file"
+                                                                className="hidden"
+                                                                accept="image/*"
+                                                                onChange={async (e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (!file) return;
+
+                                                                    try {
+                                                                        // Temporary loading state if needed, but for now direct upload
+                                                                        const url = await storageService.uploadLessonImage(file);
+                                                                        updateWord(i, "value", url);
+                                                                    } catch (err) {
+                                                                        alert("Failed to upload image.");
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-white flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-all">
+                                                                <Upload size={20} />
+                                                            </div>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-sky-600">Upload Image</span>
+                                                        </label>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <input
+                                                    value={word.value}
+                                                    onChange={(e) => updateWord(i, "value", e.target.value)}
+                                                    placeholder="e.g. One"
+                                                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all font-black text-slate-900"
+                                                />
+                                            )}
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em] pl-1">Target Word</label>

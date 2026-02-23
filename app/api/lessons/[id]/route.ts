@@ -82,6 +82,7 @@ export async function PUT(
         const wordsWithLessonId = words.map((w: any) => ({
             lesson_id: id,
             value: w.value.toString(),
+            type: w.type || 'text',
             word: w.word,
             alts: w.alts || []
         }));

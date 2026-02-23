@@ -1,6 +1,7 @@
 export interface Word {
     id?: string;
-    value: number | string;
+    value: string;
+    type?: 'text' | 'image';
     word: string;
     alts?: string[];
 }

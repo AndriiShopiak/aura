@@ -11,6 +11,7 @@ import { useQuestEditor } from "@/hooks/useQuestEditor";
 import { authService } from "@/services/authService";
 import { lessonService } from "@/services/lessonService";
 import { questService } from "@/services/questService";
+import { storageService } from "@/services/storageService";
 import { Button } from "@/components/ui/Button";
 import { AdminLogin } from "@/components/features/admin/AdminLogin";
 import { AdminDashboard } from "@/components/features/admin/AdminDashboard";
@@ -79,6 +80,23 @@ export default function AdminPage() {
         if (!confirm(`Are you sure you want to delete this ${itemType}?`)) return;
         try {
             if (adminMode === "lessons") {
+                // 1. Fetch lesson details to get words and their images
+                const lesson = await lessonService.getLessonById(id);
+                if (lesson && lesson.words) {
+                    // 2. Delete all images from storage
+                    const imageUrls = lesson.words
+                        .filter(w => w.type === 'image' && w.value)
+                        .map(w => w.value);
+
+                    for (const url of imageUrls) {
+                        try {
+                            await storageService.deleteImage(url);
+                        } catch (err) {
+                            console.error("Failed to delete image on lesson deletion:", url, err);
+                        }
+                    }
+                }
+
                 await lessonService.deleteLesson(id);
                 refreshLessons();
             } else {

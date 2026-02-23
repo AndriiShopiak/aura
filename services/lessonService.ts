@@ -70,6 +70,7 @@ export const lessonService = {
         const wordsWithLessonId = words.map((w) => ({
             lesson_id: lesson.id,
             value: w.value.toString(),
+            type: w.type || 'text',
             word: w.word,
             alts: w.alts || [],
         }));
@@ -109,6 +110,7 @@ export const lessonService = {
         const wordsWithLessonId = words.map((w) => ({
             lesson_id: id,
             value: w.value.toString(),
+            type: w.type || 'text',
             word: w.word,
             alts: w.alts || [],
         }));

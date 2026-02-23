@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
         const wordsWithLessonId = words.map((w: any) => ({
             lesson_id: lesson.id,
             value: w.value.toString(),
+            type: w.type || 'text',
             word: w.word,
             alts: w.alts || []
         }));

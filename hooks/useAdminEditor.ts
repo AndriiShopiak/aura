@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Word, Lesson } from "@/types";
 import { lessonService } from "@/services/lessonService";
+import { storageService } from "@/services/storageService";
 
 interface UseAdminEditorProps {
     adminKey: string;
@@ -13,6 +14,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
     const [description, setDescription] = useState("");
     const [responseTimer, setResponseTimer] = useState(6);
     const [words, setWords] = useState<Word[]>([{ value: "", word: "", alts: [] }]);
+    const [initialWords, setInitialWords] = useState<Word[]>([]);
     const [questId, setQuestId] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setDescription("");
         setResponseTimer(6);
         setWords([{ value: "", word: "", alts: [] }]);
+        setInitialWords([]);
         setQuestId("");
         setError(null);
     }, []);
@@ -36,7 +39,9 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setTitle(lesson.title);
         setDescription(lesson.description);
         setResponseTimer(lesson.responseTimer || 6);
-        setWords(lesson.words && lesson.words.length > 0 ? [...lesson.words] : [{ value: "", word: "", alts: [] }]);
+        const lessonWords = lesson.words && lesson.words.length > 0 ? [...lesson.words] : [{ value: "", word: "", alts: [] }];
+        setWords(lessonWords);
+        setInitialWords([...lessonWords]);
         setQuestId(lesson.quest_id || "");
         setError(null);
     }, []);
@@ -47,6 +52,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setDescription(lesson.description);
         setResponseTimer(lesson.responseTimer || 6);
         setWords((lesson.words || []).map(w => ({ ...w, id: undefined })));
+        setInitialWords([]);
         setQuestId(lesson.quest_id || "");
         setError(null);
     }, []);
@@ -76,6 +82,22 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setIsSaving(true);
         setError(null);
         try {
+            // Find images to delete (present in initialWords but not in current words)
+            const currentImageUrls = new Set(words.filter(w => w.type === 'image' && w.value).map(w => w.value));
+            const imagesToDelete = initialWords
+                .filter(w => w.type === 'image' && w.value && !currentImageUrls.has(w.value))
+                .map(w => w.value);
+
+            // Perform deletions
+            for (const url of imagesToDelete) {
+                try {
+                    await storageService.deleteImage(url);
+                } catch (err) {
+                    console.error("Failed to delete orphaned image:", url, err);
+                    // Continue anyway to save the lesson
+                }
+            }
+
             const lessonData = { title, description, responseTimer, words, questId };
 
             const method = editingId ? "PUT" : "POST";
@@ -99,7 +121,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         } finally {
             setIsSaving(false);
         }
-    }, [editingId, title, description, responseTimer, words, questId, adminKey, onSuccess]);
+    }, [editingId, title, description, responseTimer, words, initialWords, questId, adminKey, onSuccess]);
 
     return {
         state: { editingId, title, description, responseTimer, words, questId, isSaving, error },
