@@ -38,6 +38,25 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     removeWord,
     updateWord,
 }) => {
+    const [uploadingIndices, setUploadingIndices] = React.useState<Set<number>>(new Set());
+
+    const handleImageUpload = async (index: number, file: File) => {
+        if (!file) return;
+        setUploadingIndices(prev => new Set(prev).add(index));
+        try {
+            const url = await storageService.uploadLessonImage(file);
+            updateWord(index, "imageUrl", url);
+        } catch (error) {
+            console.error("Upload failed:", error);
+        } finally {
+            setUploadingIndices(prev => {
+                const next = new Set(prev);
+                next.delete(index);
+                return next;
+            });
+        }
+    };
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Sidebar Configuration */}
@@ -137,82 +156,126 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
                             >
-                                <Card className="bg-white p-8 flex flex-col md:flex-row gap-8 items-start md:items-center relative group hover:border-sky-500/20" hover={false}>
-                                    <div className="shrink-0 w-14 h-14 aura-gradient-primary rounded-2xl flex items-center justify-center text-white font-black text-base shadow-lg">
-                                        {i + 1}
+                                <Card className="bg-white p-8 flex flex-col gap-8 relative group hover:border-sky-500/20" hover={false}>
+                                    {/* Card Header: Index and Actions */}
+                                    <div className="flex items-center justify-between w-full pb-4 border-b border-slate-50">
+                                        <div className="flex items-center gap-4">
+                                            <div className="shrink-0 w-12 h-12 aura-gradient-primary rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-lg shadow-sky-200/50">
+                                                {i + 1}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-800">Word Record</span>
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase">Configuration</span>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => removeWord(i)}
+                                            className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                            title="Delete Record"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
                                     </div>
 
-                                    <div className="grow grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full items-start">
+                                        {/* Column 1: Visual Value & Image */}
                                         <div className="space-y-4">
-                                            <div className="flex justify-between items-center pl-1">
-                                                <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em]">Visual Value</label>
-                                                <div className="flex border border-slate-100 rounded-lg p-0.5 bg-slate-50">
-                                                    <button
-                                                        onClick={() => updateWord(i, "type", "text")}
-                                                        className={`p-1 rounded-md transition-all ${(!word.type || word.type === 'text') ? 'bg-white shadow-sm text-sky-500' : 'text-slate-400 hover:text-slate-600'}`}
-                                                        title="Text Mode"
-                                                    >
-                                                        <FileText size={12} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => updateWord(i, "type", "image")}
-                                                        className={`p-1 rounded-md transition-all ${word.type === 'image' ? 'bg-white shadow-sm text-sky-500' : 'text-slate-400 hover:text-slate-600'}`}
-                                                        title="Image Mode"
-                                                    >
-                                                        <ImageIcon size={12} />
-                                                    </button>
+                                            <div className="space-y-3">
+                                                <div className="flex items-center h-6 pl-1">
+                                                    <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em]">Visual Value (Text)</label>
                                                 </div>
-                                            </div>
-
-                                            {word.type === "image" ? (
-                                                <div className="flex flex-col gap-3">
-                                                    {word.value && word.value.startsWith('http') ? (
-                                                        <div className="relative group/img w-full h-32 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center">
-                                                            <img src={word.value} alt="Preview" className="h-full w-full object-contain" />
-                                                            <button
-                                                                onClick={() => updateWord(i, "value", "")}
-                                                                className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest gap-2"
-                                                            >
-                                                                <Trash2 size={14} /> Remove Image
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <label className="w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-sky-300 hover:bg-sky-50 transition-all cursor-pointer group">
-                                                            <input
-                                                                type="file"
-                                                                className="hidden"
-                                                                accept="image/*"
-                                                                onChange={async (e) => {
-                                                                    const file = e.target.files?.[0];
-                                                                    if (!file) return;
-
-                                                                    try {
-                                                                        // Temporary loading state if needed, but for now direct upload
-                                                                        const url = await storageService.uploadLessonImage(file);
-                                                                        updateWord(i, "value", url);
-                                                                    } catch (err) {
-                                                                        alert("Failed to upload image.");
-                                                                    }
-                                                                }}
-                                                            />
-                                                            <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-white flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-all">
-                                                                <Upload size={20} />
-                                                            </div>
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-sky-600">Upload Image</span>
-                                                        </label>
-                                                    )}
-                                                </div>
-                                            ) : (
                                                 <input
                                                     value={word.value}
                                                     onChange={(e) => updateWord(i, "value", e.target.value)}
                                                     placeholder="e.g. One"
                                                     className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all font-black text-slate-900"
                                                 />
-                                            )}
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between h-6 pl-1">
+                                                    <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em]">Optional Image</label>
+                                                    {word.imageUrl && (
+                                                        <button
+                                                            onClick={() => updateWord(i, "imageUrl", "")}
+                                                            className="text-[8px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-600 transition-colors"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                <div className="relative">
+                                                    {word.imageUrl ? (
+                                                        <div className="relative group/img w-full h-32 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center">
+                                                            <img src={word.imageUrl} alt="Preview" className="h-full w-full object-contain p-2" />
+                                                            <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <label className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
+                                                                    Change
+                                                                    <input
+                                                                        type="file"
+                                                                        className="hidden"
+                                                                        accept="image/*"
+                                                                        onChange={(e) => {
+                                                                            const file = e.target.files?.[0];
+                                                                            if (file) handleImageUpload(i, file);
+                                                                        }}
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <label
+                                                            onDragOver={(e) => {
+                                                                e.preventDefault();
+                                                                e.currentTarget.classList.add('border-sky-500', 'bg-sky-50');
+                                                            }}
+                                                            onDragLeave={(e) => {
+                                                                e.preventDefault();
+                                                                e.currentTarget.classList.remove('border-sky-500', 'bg-sky-50');
+                                                            }}
+                                                            onDrop={(e) => {
+                                                                e.preventDefault();
+                                                                e.currentTarget.classList.remove('border-sky-500', 'bg-sky-50');
+                                                                const file = e.dataTransfer.files?.[0];
+                                                                if (file) handleImageUpload(i, file);
+                                                            }}
+                                                            className="w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-sky-400 hover:bg-sky-50 transition-all cursor-pointer group bg-slate-50/30"
+                                                        >
+                                                            <input
+                                                                type="file"
+                                                                className="hidden"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) handleImageUpload(i, file);
+                                                                }}
+                                                            />
+                                                            {uploadingIndices.has(i) ? (
+                                                                <div className="flex flex-col items-center gap-1">
+                                                                    <Loader2 size={20} className="text-sky-500 animate-spin" />
+                                                                    <span className="text-[8px] font-black uppercase tracking-widest text-sky-600">Uploading...</span>
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="w-8 h-8 rounded-xl bg-white shadow-sm group-hover:shadow-md border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-all">
+                                                                        <Upload size={16} />
+                                                                    </div>
+                                                                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-sky-600">Add Image</span>
+                                                                </>
+                                                            )}
+                                                        </label>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em] pl-1">Target Word</label>
+
+                                        {/* Column 2: Target Word */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center h-6 pl-1">
+                                                <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em]">Target Word</label>
+                                            </div>
                                             <input
                                                 value={word.word}
                                                 onChange={(e) => updateWord(i, "word", e.target.value)}
@@ -220,27 +283,23 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                                                 className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all font-black text-sky-600"
                                             />
                                         </div>
-                                    </div>
 
-                                    <div className="md:w-56 space-y-2 w-full">
-                                        <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em] pl-1">Alternatives</label>
-                                        <input
-                                            value={word.alts ? word.alts.join(", ") : ""}
-                                            onChange={(e) => {
-                                                const alts = e.target.value.split(",").map(a => a.trim()).filter(a => a);
-                                                updateWord(i, "alts", alts);
-                                            }}
-                                            placeholder='e.g. 1, to, won'
-                                            className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all text-[10px] font-bold text-slate-500"
-                                        />
+                                        {/* Column 3: Alternatives */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center h-6 pl-1">
+                                                <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em]">Alternatives</label>
+                                            </div>
+                                            <input
+                                                value={word.alts ? word.alts.join(", ") : ""}
+                                                onChange={(e) => {
+                                                    const alts = e.target.value.split(",").map(a => a.trim()).filter(a => a);
+                                                    updateWord(i, "alts", alts);
+                                                }}
+                                                placeholder='e.g. 1, to, won'
+                                                className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 focus:outline-none focus:border-sky-500 transition-all text-xs font-bold text-slate-500"
+                                            />
+                                        </div>
                                     </div>
-
-                                    <button
-                                        onClick={() => removeWord(i)}
-                                        className="absolute md:relative top-4 right-4 md:top-0 md:right-0 p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
                                 </Card>
                             </motion.div>
                         ))}

@@ -102,19 +102,20 @@ export function PlayingView({
                     Say this word:
                     <span className="ml-2 text-slate-300">({currentIndex + 1}/{words.length})</span>
                 </p>
-                {words[currentIndex]?.type === 'image' ? (
-                    <div className="w-full h-48 flex items-center justify-center bg-white/50 rounded-3xl border border-white/40 shadow-inner overflow-hidden">
-                        <img
-                            src={words[currentIndex].value}
-                            alt="Target word"
-                            className="max-h-full max-w-full object-contain p-4"
-                        />
-                    </div>
-                ) : (
+                <div className="flex flex-col items-center gap-6">
+                    {words[currentIndex]?.imageUrl && (
+                        <div className="w-full h-48 flex items-center justify-center bg-white/50 rounded-3xl border border-white/40 shadow-inner overflow-hidden">
+                            <img
+                                src={words[currentIndex].imageUrl}
+                                alt="Target visual"
+                                className="max-h-full max-w-full object-contain p-4"
+                            />
+                        </div>
+                    )}
                     <h3 className="text-4xl font-black text-slate-800 tracking-tight">
                         {words[currentIndex]?.value}
                     </h3>
-                )}
+                </div>
             </div>
         </div>
     );

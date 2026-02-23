@@ -1,7 +1,7 @@
 export interface Word {
     id?: string;
     value: string;
-    type?: 'text' | 'image';
+    imageUrl?: string;
     word: string;
     alts?: string[];
 }

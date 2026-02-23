@@ -85,8 +85,8 @@ export default function AdminPage() {
                 if (lesson && lesson.words) {
                     // 2. Delete all images from storage
                     const imageUrls = lesson.words
-                        .filter(w => w.type === 'image' && w.value)
-                        .map(w => w.value);
+                        .filter(w => w.imageUrl)
+                        .map(w => w.imageUrl as string);
 
                     for (const url of imageUrls) {
                         try {

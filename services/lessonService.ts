@@ -19,7 +19,10 @@ export const lessonService = {
         return data.map((lesson: any) => ({
             ...lesson,
             responseTimer: lesson.response_timer,
-            words: lesson.words || [],
+            words: (lesson.words || []).map(({ image_url, type, ...w }: any) => ({
+                ...w,
+                imageUrl: image_url
+            })),
         }));
     },
 
@@ -46,7 +49,10 @@ export const lessonService = {
         return {
             ...lesson,
             responseTimer: lesson.response_timer,
-            words: words || [],
+            words: (words || []).map(({ image_url, type, ...w }: any) => ({
+                ...w,
+                imageUrl: image_url
+            })),
         };
     },
 
@@ -70,7 +76,7 @@ export const lessonService = {
         const wordsWithLessonId = words.map((w) => ({
             lesson_id: lesson.id,
             value: w.value.toString(),
-            type: w.type || 'text',
+            image_url: w.imageUrl,
             word: w.word,
             alts: w.alts || [],
         }));
@@ -110,7 +116,7 @@ export const lessonService = {
         const wordsWithLessonId = words.map((w) => ({
             lesson_id: id,
             value: w.value.toString(),
-            type: w.type || 'text',
+            image_url: w.imageUrl,
             word: w.word,
             alts: w.alts || [],
         }));

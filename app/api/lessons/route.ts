@@ -21,7 +21,11 @@ export async function GET(req: NextRequest) {
 
         const mappedData = data.map(lesson => ({
             ...lesson,
-            responseTimer: lesson.response_timer
+            responseTimer: lesson.response_timer,
+            words: (lesson.words || []).map(({ image_url, type, ...w }: any) => ({
+                ...w,
+                imageUrl: image_url
+            }))
         }));
 
         return NextResponse.json(mappedData);
@@ -63,7 +67,7 @@ export async function POST(req: NextRequest) {
         const wordsWithLessonId = words.map((w: any) => ({
             lesson_id: lesson.id,
             value: w.value.toString(),
-            type: w.type || 'text',
+            image_url: w.imageUrl,
             word: w.word,
             alts: w.alts || []
         }));

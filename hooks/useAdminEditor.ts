@@ -83,10 +83,10 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setError(null);
         try {
             // Find images to delete (present in initialWords but not in current words)
-            const currentImageUrls = new Set(words.filter(w => w.type === 'image' && w.value).map(w => w.value));
+            const currentImageUrls = new Set(words.filter(w => w.imageUrl).map(w => w.imageUrl));
             const imagesToDelete = initialWords
-                .filter(w => w.type === 'image' && w.value && !currentImageUrls.has(w.value))
-                .map(w => w.value);
+                .filter((w): w is Word & { imageUrl: string } => !!(w.imageUrl && !currentImageUrls.has(w.imageUrl)))
+                .map(w => w.imageUrl);
 
             // Perform deletions
             for (const url of imagesToDelete) {

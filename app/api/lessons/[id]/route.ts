@@ -34,7 +34,10 @@ export async function GET(
         return NextResponse.json({
             ...lesson,
             responseTimer: lesson.response_timer,
-            words
+            words: (words || []).map(({ image_url, type, ...w }: any) => ({
+                ...w,
+                imageUrl: image_url
+            }))
         });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -82,7 +85,7 @@ export async function PUT(
         const wordsWithLessonId = words.map((w: any) => ({
             lesson_id: id,
             value: w.value.toString(),
-            type: w.type || 'text',
+            image_url: w.imageUrl,
             word: w.word,
             alts: w.alts || []
         }));
