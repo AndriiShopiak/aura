@@ -2,6 +2,7 @@ export interface Word {
     id?: string;
     value: string;
     imageUrl?: string;
+    tempFile?: File;
     word: string;
     alts?: string[];
 }

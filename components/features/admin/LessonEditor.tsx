@@ -4,7 +4,6 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Type, AlignLeft, Clock, Info, LayoutDashboard, Plus, Trash2, Image as ImageIcon, FileText, Upload, Loader2 } from "lucide-react";
 import { Word, Quest } from "@/types";
-import { storageService } from "@/services/storageService";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 interface LessonEditorProps {
@@ -38,23 +37,12 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     removeWord,
     updateWord,
 }) => {
-    const [uploadingIndices, setUploadingIndices] = React.useState<Set<number>>(new Set());
 
-    const handleImageUpload = async (index: number, file: File) => {
+    const handleImageUpload = (index: number, file: File) => {
         if (!file) return;
-        setUploadingIndices(prev => new Set(prev).add(index));
-        try {
-            const url = await storageService.uploadLessonImage(file);
-            updateWord(index, "imageUrl", url);
-        } catch (error) {
-            console.error("Upload failed:", error);
-        } finally {
-            setUploadingIndices(prev => {
-                const next = new Set(prev);
-                next.delete(index);
-                return next;
-            });
-        }
+        const previewUrl = URL.createObjectURL(file);
+        updateWord(index, "imageUrl", previewUrl);
+        updateWord(index, "tempFile", file);
     };
 
     return (
@@ -198,7 +186,10 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                                                     <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em]">Optional Image</label>
                                                     {word.imageUrl && (
                                                         <button
-                                                            onClick={() => updateWord(i, "imageUrl", "")}
+                                                            onClick={() => {
+                                                                updateWord(i, "imageUrl", "");
+                                                                updateWord(i, "tempFile", undefined);
+                                                            }}
                                                             className="text-[8px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-600 transition-colors"
                                                         >
                                                             Remove
@@ -252,19 +243,12 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                                                                     if (file) handleImageUpload(i, file);
                                                                 }}
                                                             />
-                                                            {uploadingIndices.has(i) ? (
-                                                                <div className="flex flex-col items-center gap-1">
-                                                                    <Loader2 size={20} className="text-sky-500 animate-spin" />
-                                                                    <span className="text-[8px] font-black uppercase tracking-widest text-sky-600">Uploading...</span>
+                                                            <>
+                                                                <div className="w-8 h-8 rounded-xl bg-white shadow-sm group-hover:shadow-md border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-all">
+                                                                    <Upload size={16} />
                                                                 </div>
-                                                            ) : (
-                                                                <>
-                                                                    <div className="w-8 h-8 rounded-xl bg-white shadow-sm group-hover:shadow-md border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-all">
-                                                                        <Upload size={16} />
-                                                                    </div>
-                                                                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-sky-600">Add Image</span>
-                                                                </>
-                                                            )}
+                                                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-sky-600">Add Image</span>
+                                                            </>
                                                         </label>
                                                     )}
                                                 </div>

@@ -82,8 +82,27 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
         setIsSaving(true);
         setError(null);
         try {
-            // Find images to delete (present in initialWords but not in current words)
-            const currentImageUrls = new Set(words.filter(w => w.imageUrl).map(w => w.imageUrl));
+            // 1. Upload new files and get public URLs
+            const finalWords = await Promise.all(words.map(async (w) => {
+                if (w.tempFile) {
+                    try {
+                        const publicUrl = await storageService.uploadLessonImage(w.tempFile);
+                        // Revoke blob URL to clean up memory
+                        if (w.imageUrl?.startsWith('blob:')) {
+                            URL.revokeObjectURL(w.imageUrl);
+                        }
+                        const { tempFile, ...wordWithoutFile } = w;
+                        return { ...wordWithoutFile, imageUrl: publicUrl };
+                    } catch (err) {
+                        console.error("Failed to upload image for word:", w.word, err);
+                        throw new Error(`Failed to upload image for "${w.word}"`);
+                    }
+                }
+                return w;
+            }));
+
+            // 2. Find images to delete (present in initialWords but not in current words)
+            const currentImageUrls = new Set(finalWords.filter(w => w.imageUrl).map(w => w.imageUrl));
             const imagesToDelete = initialWords
                 .filter((w): w is Word & { imageUrl: string } => !!(w.imageUrl && !currentImageUrls.has(w.imageUrl)))
                 .map(w => w.imageUrl);
@@ -98,7 +117,7 @@ export const useAdminEditor = ({ adminKey, onSuccess }: UseAdminEditorProps) => 
                 }
             }
 
-            const lessonData = { title, description, responseTimer, words, questId };
+            const lessonData = { title, description, responseTimer, words: finalWords, questId };
 
             const method = editingId ? "PUT" : "POST";
             const url = editingId ? `/api/lessons/${editingId}` : "/api/lessons";
