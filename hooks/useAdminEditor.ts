@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import { Word, Lesson } from "@/types";
-import { lessonService } from "@/services/lessonService";
 import { storageService } from "@/services/storageService";
 
 interface UseAdminEditorProps {

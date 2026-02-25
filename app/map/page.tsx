@@ -174,9 +174,9 @@ function MapContent() {
                     })}
 
                     {lessons.length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full">
-                            <h2 className="text-2xl font-black text-white tracking-tight">Поки немає островів!</h2>
-                            <p className="text-sky-200 font-medium">Зайди пізніше або створи свій перший урок.</p>
+                        <div className="flex flex-col items-center text-center justify-center h-full">
+                            <h2 className="text-2xl font-black text-white tracking-tight">There are no lessons in this section yet! </h2>
+                            <p className="text-sky-200 font-medium">Check back later.</p>
                         </div>
                     )}
                 </div>

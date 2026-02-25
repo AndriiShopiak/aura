@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Star, Play, Trophy, BookOpen, Clock } from 'lucide-react'
+import { X, Star, Play, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { Lesson } from '@/types'
 import { LessonProgress } from '@/lib/progress'
@@ -33,7 +33,7 @@ export const LessonSidebar: React.FC<LessonSidebarProps> = ({
             >
                 {/* Header */}
                 <div className="p-6 flex justify-between items-center border-b border-slate-100">
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Деталі Квесту</h2>
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Lesson Details</h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-slate-600"
@@ -51,7 +51,7 @@ export const LessonSidebar: React.FC<LessonSidebarProps> = ({
                                 {lesson.title}
                             </h3>
                             <p className="text-slate-500 font-medium leading-relaxed">
-                                {lesson.description || "Підготуйся до нової пригоди! У цьому уроці ми вивчимо цікаві слова та фрази."}
+                                {lesson.description || "Get ready for a new adventure! In this lesson, we will learn interesting words and phrases."}
                             </p>
                         </div>
 
@@ -60,24 +60,12 @@ export const LessonSidebar: React.FC<LessonSidebarProps> = ({
                             <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 flex flex-col items-center justify-center text-center">
                                 <Star className={`mb-2 ${progress?.stars ? 'text-amber-400 fill-current' : 'text-slate-300'}`} size={24} />
                                 <span className="text-xl font-black text-slate-900">{progress?.stars || 0}/3</span>
-                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Зірки</span>
+                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Stars</span>
                             </div>
                             <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 flex flex-col items-center justify-center text-center">
                                 <Trophy className="mb-2 text-primary" size={24} />
                                 <span className="text-xl font-black text-slate-900">{progress?.score || 0}</span>
-                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Рекорд</span>
-                            </div>
-                        </div>
-
-                        {/* Lesson Info */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3 text-slate-600 font-semibold">
-                                <BookOpen size={20} className="text-primary" />
-                                <span>12 нових слів</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-slate-600 font-semibold">
-                                <Clock size={20} className="text-primary" />
-                                <span>~5 хвилин</span>
+                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Record</span>
                             </div>
                         </div>
                     </div>
@@ -91,12 +79,12 @@ export const LessonSidebar: React.FC<LessonSidebarProps> = ({
                             className="w-full h-16 bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-lg flex items-center justify-center gap-3 font-black text-xl transition-all hover:scale-[1.02] active:scale-[0.98] border-b-4 border-primary-dark"
                         >
                             <Play fill="currentColor" size={24} />
-                            ГРАТИ ЗАРАЗ
+                            PLAY NOW
                         </Link>
                     ) : (
                         <div className="w-full h-16 bg-slate-200 text-slate-500 rounded-2xl flex items-center justify-center gap-3 font-black text-xl cursor-not-allowed grayscale">
                             <X size={24} />
-                            ЗАБЛОКОВАНО
+                            LOCKED
                         </div>
                     )}
                 </div>

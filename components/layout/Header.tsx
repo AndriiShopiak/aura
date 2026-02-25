@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Mic, Trophy, Map as MapIcon, Settings } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import { UserProgress } from "@/types";
@@ -30,23 +30,13 @@ export const Header: React.FC<HeaderProps> = ({ progress }) => {
                 </div>
             </Link>
 
-            <div className="flex items-center flex-wrap gap-3">
-                <Button
-                    href="#"
-                    variant="amber"
-                    leftIcon={<Trophy size={18} />}
-                >
-                    <span>{progress?.totalStars || 0} Stars</span>
-                </Button>
-
-                <Button
-                    href="#"
-                    variant="sky"
-                    leftIcon={<MapIcon size={18} />}
-                >
-                    <span>Map</span>
-                </Button>
-            </div>
+            <Button
+                href="#"
+                variant="amber"
+                leftIcon={<Trophy size={18} />}
+            >
+                <span>{progress?.totalStars || 0} Stars</span>
+            </Button>
         </header>
     );
 };
