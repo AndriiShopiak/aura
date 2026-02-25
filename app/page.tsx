@@ -38,7 +38,7 @@ export default function Home() {
               <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-sky-600">
                 <BookOpen size={20} />
               </div>
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Your Quests</h2>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Units</h2>
             </div>
           </div>
 

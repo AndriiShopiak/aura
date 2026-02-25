@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aura - Мовна Практика",
-  description: "Ваш персональний помічник для покращення мовлення та вимови.",
+  title: "Aura - Language Practice",
+  description: "Your personal assistant for improving speech and pronunciation.",
 };
 
 export default function RootLayout({

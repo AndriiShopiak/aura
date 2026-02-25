@@ -26,7 +26,7 @@ export const QuestDashboard: React.FC<QuestDashboardProps> = ({
         return (
             <div className="flex flex-col items-center justify-center py-24 text-slate-400 gap-4">
                 <Loader2 className="animate-spin" size={40} />
-                <span className="font-bold uppercase tracking-widest text-xs">Loading quests...</span>
+                <span className="font-bold uppercase tracking-widest text-xs">Loading units...</span>
             </div>
         );
     }
@@ -34,9 +34,9 @@ export const QuestDashboard: React.FC<QuestDashboardProps> = ({
     if (quests.length === 0) {
         return (
             <div className="text-center py-24 bg-white rounded-4xl aura-card border-white/50 border-dashed border-2">
-                <p className="text-slate-400 font-bold mb-8">No quests found. Create your first quest to start adding lessons.</p>
+                <p className="text-slate-400 font-bold mb-8">No units found. Create your first unit to start adding lessons.</p>
                 <Button onClick={onCreateNew}>
-                    Create First Quest
+                    Create First Unit
                 </Button>
             </div>
         );

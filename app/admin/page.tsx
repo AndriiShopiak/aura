@@ -132,7 +132,7 @@ export default function AdminPage() {
         ? "Tutor Dashboard"
         : adminMode === "lessons"
             ? (editorState.editingId ? "Edit Lesson" : "New Lesson")
-            : (questEditorState.editingQuestId ? "Edit Quest" : "New Quest");
+            : (questEditorState.editingQuestId ? "Edit Unit" : "New Unit");
 
     const handleCreateNew = () => {
         if (adminMode === "lessons") {
@@ -214,7 +214,7 @@ export default function AdminPage() {
                                         onClick={() => setAdminMode("quests")}
                                         className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${adminMode === "quests" ? "bg-white text-primary shadow-lg" : "text-white/70 hover:text-white"}`}
                                     >
-                                        Quests
+                                        Units
                                     </button>
                                 </div>
                             )}
@@ -232,7 +232,7 @@ export default function AdminPage() {
                                 className="w-full md:w-auto"
                                 leftIcon={<Plus size={20} />}
                             >
-                                {adminMode === "lessons" ? "Create Lesson" : "Create Quest"}
+                                {adminMode === "lessons" ? "Create Lesson" : "Create Unit"}
                             </Button>
                         ) : (
                             <Button
@@ -245,7 +245,7 @@ export default function AdminPage() {
                             >
                                 {adminMode === "lessons"
                                     ? (editorState.editingId ? "Update Lesson" : "Publish Lesson")
-                                    : (questEditorState.editingQuestId ? "Update Quest" : "Create Quest")}
+                                    : (questEditorState.editingQuestId ? "Update Unit" : "Create Unit")}
                             </Button>
                         )}
                     </div>

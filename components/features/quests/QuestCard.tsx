@@ -30,12 +30,6 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest }) => {
                     <p className="text-slate-500 text-sm leading-relaxed mb-8 grow font-medium group-hover:text-slate-700">
                         {quest.description}
                     </p>
-
-                    <div className="w-full flex items-center justify-between pt-6 border-t border-slate-100 group-hover:border-primary/20">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-primary transition-colors">
-                            Explore Quest
-                        </span>
-                    </div>
                 </div>
             </Card>
         </Link>
