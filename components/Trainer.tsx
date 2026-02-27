@@ -24,6 +24,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
         score,
         timeLeft,
         isCorrect,
+        stage,
         triggerMatch,
         reset,
         startLesson,
@@ -91,6 +92,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
                         volume={volume}
                         transcript={transcript}
                         isCorrect={isCorrect}
+                        stage={stage}
                         onStartListening={startSpeech}
                         onStopListening={stopSpeech}
                     />

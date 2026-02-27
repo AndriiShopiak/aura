@@ -14,7 +14,8 @@ interface ResultViewProps {
 
 export function ResultView({ score, totalWords, onRetry }: ResultViewProps) {
     const router = useRouter();
-    const stars = calculateStars(score, totalWords);
+    const maxScore = totalWords * 2;
+    const stars = calculateStars(score, maxScore);
 
     return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full text-center">
@@ -37,11 +38,11 @@ export function ResultView({ score, totalWords, onRetry }: ResultViewProps) {
                 ))}
             </div>
             <div className="w-24 h-24 aura-gradient-primary rounded-4xl flex items-center justify-center mx-auto mb-8 text-white shadow-xl">
-                <span className="text-3xl font-black">{Math.round((score / totalWords) * 100)}%</span>
+                <span className="text-3xl font-black">{Math.round((score / maxScore) * 100)}%</span>
             </div>
             <h2 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">Well Done!</h2>
             <p className="text-slate-500 font-medium mb-12">
-                You balanced {score} out of {totalWords} items.
+                You balanced {score} out of {maxScore} points.
             </p>
             <div className="flex flex-col gap-4 w-full">
                 <button

@@ -22,6 +22,7 @@ export function useTrainerLogic({
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(responseTimer);
     const [isCorrect, setIsCorrect] = useState(false);
+    const [stage, setStage] = useState<"with-hint" | "recall">("with-hint");
 
     const isTransitioningRef = useRef(false);
     const currentIndexRef = useRef(0);
@@ -39,6 +40,7 @@ export function useTrainerLogic({
     const startLesson = useCallback(() => {
         setGameState("playing");
         setTimeLeft(responseTimer);
+        setStage("with-hint");
     }, [responseTimer]);
 
     const handleNext = useCallback(() => {
@@ -47,32 +49,47 @@ export function useTrainerLogic({
 
         setTimeout(() => {
             if (currentIndexRef.current < words.length - 1) {
+                // Move to next word in the current round
                 setCurrentIndex(prev => prev + 1);
                 setTimeLeft(responseTimer);
                 setIsCorrect(false);
                 isTransitioningRef.current = false;
             } else {
-                setGameState("result");
+                // Reached the end of the round
+                if (stage === "with-hint") {
+                    // Switch to Recall Round
+                    setCurrentIndex(0);
+                    setStage("recall");
+                    setTimeLeft(responseTimer);
+                    setIsCorrect(false);
+                    isTransitioningRef.current = false;
+                } else {
+                    // Finished Recall Round
+                    setGameState("result");
 
-                const finalScore = scoreRef.current;
-                const maxScore = words.length;
-                const finalStars = calculateStars(finalScore, maxScore);
+                    const finalScore = scoreRef.current;
+                    const maxPossibleScore = words.length * 2;
+                    const finalStars = calculateStars(finalScore, maxPossibleScore);
 
-                saveLessonProgress(lessonId, finalScore, finalStars);
+                    saveLessonProgress(lessonId, finalScore, finalStars);
 
-                if (onComplete) onComplete(finalScore);
-                isTransitioningRef.current = false;
+                    if (onComplete) onComplete(finalScore);
+                    isTransitioningRef.current = false;
+                }
             }
         }, 1000);
-    }, [words.length, responseTimer, lessonId, onComplete]);
+    }, [words.length, responseTimer, lessonId, onComplete, stage]);
 
     const triggerMatch = useCallback(() => {
         setIsCorrect(true);
+
+        // Option B: Always count score for correct answers in both rounds
         setScore(s => {
             const newScore = s + 1;
             scoreRef.current = newScore;
             return newScore;
         });
+
         handleNext();
     }, [handleNext]);
 
@@ -83,6 +100,7 @@ export function useTrainerLogic({
         scoreRef.current = 0;
         setTimeLeft(responseTimer);
         setIsCorrect(false);
+        setStage("with-hint");
         isTransitioningRef.current = false;
     }, [responseTimer]);
 
@@ -109,6 +127,7 @@ export function useTrainerLogic({
         score,
         timeLeft,
         isCorrect,
+        stage,
         triggerMatch,
         reset,
         setIsCorrect,

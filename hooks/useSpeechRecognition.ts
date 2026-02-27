@@ -22,6 +22,18 @@ export function useSpeechRecognition({
     const recognitionRef = useRef<any>(null);
     const isMountedRef = useRef(true);
 
+    // Dynamic state refs to avoid stale closures in recognition callbacks
+    const targetWordRef = useRef(targetWord);
+    const alternativeWordsRef = useRef(alternativeWords);
+    const onMatchRef = useRef(onMatch);
+
+    // Keep refs in sync with props
+    useEffect(() => {
+        targetWordRef.current = targetWord;
+        alternativeWordsRef.current = alternativeWords;
+        onMatchRef.current = onMatch;
+    }, [targetWord, alternativeWords, onMatch]);
+
     const stop = useCallback(() => {
         if (recognitionRef.current) {
             try {
@@ -72,8 +84,8 @@ export function useSpeechRecognition({
                 if (!isMountedRef.current) return;
 
                 let currentTranscript = "";
-                const target = targetWord?.toLowerCase().trim();
-                const alts = alternativeWords.map(a => a.toLowerCase().trim());
+                const currentTarget = targetWordRef.current?.toLowerCase().trim();
+                const currentAlts = alternativeWordsRef.current.map(a => a.toLowerCase().trim());
 
                 // We want to check the most recent results
                 for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -83,16 +95,16 @@ export function useSpeechRecognition({
 
                     currentTranscript += event.results[i][0].transcript;
 
-                    if (target) {
-                        const normalizedTarget = target.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").trim();
+                    if (currentTarget) {
+                        const normalizedTarget = currentTarget.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").trim();
                         const matchesTarget = spoke === normalizedTarget || spoke.includes(normalizedTarget);
-                        const matchesAlts = alts.some(a => {
+                        const matchesAlts = currentAlts.some(a => {
                             const normalizedAlt = a.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").trim();
                             return spoke === normalizedAlt || spoke.includes(normalizedAlt);
                         });
 
                         if (matchesTarget || matchesAlts) {
-                            if (onMatch) onMatch(spoke);
+                            if (onMatchRef.current) onMatchRef.current(spoke);
                             return;
                         }
                     }
@@ -108,7 +120,7 @@ export function useSpeechRecognition({
             console.error("Error starting speech recognition:", err);
             setIsListening(false);
         }
-    }, [targetWord, alternativeWords, onMatch, onResult, stop]);
+    }, [onResult, stop]);
 
     useEffect(() => {
         isMountedRef.current = true;

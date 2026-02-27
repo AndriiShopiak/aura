@@ -13,6 +13,7 @@ interface PlayingViewProps {
     volume: number;
     transcript: string;
     isCorrect: boolean;
+    stage: "with-hint" | "recall";
     onStartListening: () => void;
     onStopListening: () => void;
 }
@@ -26,15 +27,58 @@ export function PlayingView({
     volume,
     transcript,
     isCorrect,
+    stage,
     onStartListening,
     onStopListening,
 }: PlayingViewProps) {
+    const totalWords = words.length;
+    const stage1Progress = stage === "with-hint" ? (currentIndex / totalWords) * 100 : 100;
+    const stage2Progress = stage === "recall" ? (currentIndex / totalWords) * 100 : 0;
+
     return (
         <div className="w-full text-center flex flex-col items-center">
+            {/* 0. Dual Round Progress Bar */}
+            <div className="w-full flex gap-2 mb-8 items-center px-2">
+                <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className={`text-[8px] font-black uppercase tracking-tighter ${stage === "with-hint" ? "text-blue-500" : "text-slate-400"}`}>
+                            Round 1: Hint
+                        </span>
+                        {stage === "with-hint" && (
+                            <span className="text-[8px] font-bold text-slate-400">{currentIndex + 1}/{totalWords}</span>
+                        )}
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${stage1Progress}%` }}
+                            className="h-full bg-blue-500 rounded-full"
+                        />
+                    </div>
+                </div>
+                <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className={`text-[8px] font-black uppercase tracking-tighter ${stage === "recall" ? "text-indigo-500" : "text-slate-400"}`}>
+                            Round 2: Recall
+                        </span>
+                        {stage === "recall" && (
+                            <span className="text-[8px] font-bold text-slate-400">{currentIndex + 1}/{totalWords}</span>
+                        )}
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${stage2Progress}%` }}
+                            className="h-full bg-indigo-500 rounded-full"
+                        />
+                    </div>
+                </div>
+            </div>
+
             {/* 1. Target Word & Image (Top Priority) */}
             <div className="mb-10 w-full">
                 <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-4">
-                    Say this word:
+                    {stage === "with-hint" ? "Say this word:" : "Say the word from memory:"}
                     <span className="ml-2 text-slate-300">({currentIndex + 1}/{words.length})</span>
                 </p>
                 <div className="flex flex-col items-center gap-6">
@@ -47,9 +91,20 @@ export function PlayingView({
                             />
                         </div>
                     )}
-                    <h3 className="text-4xl font-black text-slate-800 tracking-tight">
-                        {words[currentIndex]?.value}
-                    </h3>
+                    <div className="flex flex-col items-center gap-2">
+                        <h3 className="text-4xl font-black text-slate-800 tracking-tight">
+                            {words[currentIndex]?.value}
+                        </h3>
+                        {stage === "with-hint" && (
+                            <motion.p
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-blue-500 font-bold text-lg uppercase tracking-wider"
+                            >
+                                {words[currentIndex]?.word}
+                            </motion.p>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -101,7 +156,7 @@ export function PlayingView({
             {/* 3. Status Label & Progress */}
             <div className="w-full">
                 <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-6">
-                    Step 1: Speech Recognition
+                    {stage === "with-hint" ? "Stage 1: Learning with Hint" : "Stage 2: Recall from Memory"}
                 </p>
 
                 <div className="flex justify-between items-center mb-2 px-1">
