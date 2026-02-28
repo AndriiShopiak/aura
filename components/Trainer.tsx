@@ -24,6 +24,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
         score,
         timeLeft,
         isCorrect,
+        isTimeout,
         stage,
         triggerMatch,
         reset,
@@ -40,6 +41,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
     const {
         isListening,
         transcript,
+        isFinal,
         volume,
         start: startSpeech,
         stop: stopSpeech,
@@ -73,7 +75,7 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
         <div className="w-full max-w-md aura-card aura-glass p-0 relative overflow-hidden transition-all duration-500 shadow-2xl border-white/40">
             <TrainerHeader title={title} />
 
-            <div className={`p-10 relative z-10 min-h-[440px] flex flex-col items-center justify-center transition-colors duration-500 ${isCorrect ? 'bg-green-500/10' : ''}`}>
+            <div className={`p-6 relative z-10 min-h-[400px] flex flex-col items-center justify-center transition-colors duration-500 ${isCorrect ? 'bg-green-500/10' : ''}`}>
                 {gameState === "idle" && (
                     <IdleView
                         title={title}
@@ -89,6 +91,8 @@ export default function Trainer({ lessonId, title, words, responseTimer, onCompl
                         timeLeft={timeLeft}
                         responseTimer={responseTimer}
                         isListening={isListening}
+                        isFinal={isFinal}
+                        isTimeout={isTimeout}
                         volume={volume}
                         transcript={transcript}
                         isCorrect={isCorrect}

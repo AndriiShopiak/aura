@@ -18,6 +18,7 @@ export function useSpeechRecognition({
 }: UseSpeechRecognitionOptions = {}) {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
+    const [isFinal, setIsFinal] = useState(false);
 
     const recognitionRef = useRef<any>(null);
     const isMountedRef = useRef(true);
@@ -47,6 +48,7 @@ export function useSpeechRecognition({
             recognitionRef.current = null;
         }
         setIsListening(false);
+        setIsFinal(false);
     }, []);
 
     const start = useCallback(async () => {
@@ -60,6 +62,8 @@ export function useSpeechRecognition({
 
         // Stop any existing instances
         stop();
+        setTranscript("");
+        setIsFinal(false);
 
         try {
             const recognition = new SpeechRecognition();
@@ -84,12 +88,16 @@ export function useSpeechRecognition({
                 if (!isMountedRef.current) return;
 
                 let currentTranscript = "";
+                let currentIsFinal = false;
                 const currentTarget = targetWordRef.current?.toLowerCase().trim();
                 const currentAlts = alternativeWordsRef.current.map(a => a.toLowerCase().trim());
 
                 // We want to check the most recent results
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const result = event.results[i][0].transcript.toLowerCase().trim();
+                    const isFinalResult = event.results[i].isFinal;
+                    if (isFinalResult) currentIsFinal = true;
+
                     // Remove punctuation that might be added by mobile browsers
                     const spoke = result.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").trim();
 
@@ -105,13 +113,15 @@ export function useSpeechRecognition({
 
                         if (matchesTarget || matchesAlts) {
                             if (onMatchRef.current) onMatchRef.current(spoke);
+                            setIsFinal(true);
                             return;
                         }
                     }
                 }
 
                 setTranscript(currentTranscript);
-                if (onResult) onResult(currentTranscript, event.results[event.results.length - 1].isFinal);
+                setIsFinal(currentIsFinal);
+                if (onResult) onResult(currentTranscript, currentIsFinal);
             };
 
             recognitionRef.current = recognition;
@@ -130,9 +140,16 @@ export function useSpeechRecognition({
         };
     }, [stop]);
 
+    // Reset state when targetWord changes to prevent stale feedback
+    useEffect(() => {
+        setTranscript("");
+        setIsFinal(false);
+    }, [targetWord]);
+
     return {
         isListening,
         transcript,
+        isFinal,
         volume: 0, // Keep volume for API compatibility but return 0
         start,
         stop,

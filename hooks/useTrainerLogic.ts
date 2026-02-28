@@ -22,6 +22,7 @@ export function useTrainerLogic({
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(responseTimer);
     const [isCorrect, setIsCorrect] = useState(false);
+    const [isTimeout, setIsTimeout] = useState(false);
     const [stage, setStage] = useState<"with-hint" | "recall">("with-hint");
 
     const isTransitioningRef = useRef(false);
@@ -41,6 +42,7 @@ export function useTrainerLogic({
         setGameState("playing");
         setTimeLeft(responseTimer);
         setStage("with-hint");
+        setIsTimeout(false);
     }, [responseTimer]);
 
     const handleNext = useCallback(() => {
@@ -53,6 +55,7 @@ export function useTrainerLogic({
                 setCurrentIndex(prev => prev + 1);
                 setTimeLeft(responseTimer);
                 setIsCorrect(false);
+                setIsTimeout(false);
                 isTransitioningRef.current = false;
             } else {
                 // Reached the end of the round
@@ -62,6 +65,7 @@ export function useTrainerLogic({
                     setStage("recall");
                     setTimeLeft(responseTimer);
                     setIsCorrect(false);
+                    setIsTimeout(false);
                     isTransitioningRef.current = false;
                 } else {
                     // Finished Recall Round
@@ -101,6 +105,7 @@ export function useTrainerLogic({
         setTimeLeft(responseTimer);
         setIsCorrect(false);
         setStage("with-hint");
+        setIsTimeout(false);
         isTransitioningRef.current = false;
     }, [responseTimer]);
 
@@ -111,6 +116,7 @@ export function useTrainerLogic({
             timer = setInterval(() => {
                 setTimeLeft(prev => {
                     if (prev <= 1) {
+                        setIsTimeout(true);
                         handleNext();
                         return responseTimer;
                     }
@@ -127,6 +133,7 @@ export function useTrainerLogic({
         score,
         timeLeft,
         isCorrect,
+        isTimeout,
         stage,
         triggerMatch,
         reset,
