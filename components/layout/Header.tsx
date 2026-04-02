@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import { Trophy } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import { UserProgress } from "@/types";
 
@@ -13,30 +12,29 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ progress }) => {
     return (
-        <header className="flex justify-between items-center mb-16 flex-wrap gap-5">
-            <Link href="/" className="flex items-center gap-4 group">
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-sky-600 aura-logo-shadow transition-transform">
+        <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+            <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+                {/* Logo */}
+                <Link href="/" className="flex items-center gap-3 group">
                     <Image
                         src="/aura-logo.svg"
                         alt="Aura Logo"
-                        width={24}
-                        height={24}
-                        className="w-6 h-6 object-contain"
+                        width={36}
+                        height={36}
+                        className="w-9 h-9 rounded-xl drop-shadow-sm transition-transform group-hover:scale-105"
                     />
-                </div>
-                <div className="flex flex-col text-white">
-                    <h1 className="text-2xl font-black tracking-tight leading-none">Aura</h1>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-sky-100 mt-1 opacity-80">Speech App</span>
-                </div>
-            </Link>
+                    <span className="text-lg font-black tracking-tight text-slate-900">Aura</span>
+                </Link>
 
-            <Button
-                href="#"
-                variant="amber"
-                leftIcon={<Trophy size={18} />}
-            >
-                <span>{progress?.totalStars || 0} Stars</span>
-            </Button>
+                {/* Stars */}
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-50 border border-amber-200/60 rounded-full">
+                    <Trophy size={14} className="text-amber-500" />
+                    <span className="text-sm font-black text-amber-700 tabular-nums">
+                        {progress?.totalStars || 0}
+                    </span>
+                    <span className="text-xs font-bold text-amber-500/70 uppercase tracking-wider">stars</span>
+                </div>
+            </div>
         </header>
     );
 };
