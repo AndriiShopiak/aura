@@ -37,10 +37,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
                 <h1 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Tutor Console</h1>
                 <p className="text-slate-500 font-medium mb-10">Enter your developer access key to manage lessons.</p>
 
-                <form onSubmit={onSubmit} className="space-y-6">
+                <form onSubmit={onSubmit} autoComplete="on" className="space-y-6">
                     <div className="relative group">
                         <input
+                            id="admin-password"
+                            name="password"
                             type="password"
+                            autoComplete="current-password"
                             placeholder="Access Key"
                             value={adminKey}
                             onChange={(e) => setAdminKey(e.target.value)}
