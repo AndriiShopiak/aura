@@ -28,6 +28,9 @@ export function useTrainerLogic({
     const isTransitioningRef = useRef(false);
     const currentIndexRef = useRef(0);
     const scoreRef = useRef(0);
+    // stageRef дозволяє handleNext завжди читати актуальне значення stage
+    // без залежності від closure — інакше таймер міг читати застарілий stage
+    const stageRef = useRef<"with-hint" | "recall">("with-hint");
 
     // Sync refs
     useEffect(() => {
@@ -37,6 +40,10 @@ export function useTrainerLogic({
     useEffect(() => {
         scoreRef.current = score;
     }, [score]);
+
+    useEffect(() => {
+        stageRef.current = stage;
+    }, [stage]);
 
     const startLesson = useCallback(() => {
         setGameState("playing");
@@ -59,7 +66,8 @@ export function useTrainerLogic({
                 isTransitioningRef.current = false;
             } else {
                 // Reached the end of the round
-                if (stage === "with-hint") {
+                // Читаємо з ref, а не з closure — уникаємо stale stage
+                if (stageRef.current === "with-hint") {
                     // Switch to Recall Round
                     setCurrentIndex(0);
                     setStage("recall");
@@ -82,7 +90,9 @@ export function useTrainerLogic({
                 }
             }
         }, 1000);
-    }, [words.length, responseTimer, lessonId, onComplete, stage]);
+    // stage прибрано з deps — він читається через stageRef.current
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [words.length, responseTimer, lessonId, onComplete]);
 
     const triggerMatch = useCallback(() => {
         setIsCorrect(true);

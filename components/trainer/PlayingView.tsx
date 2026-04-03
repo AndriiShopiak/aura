@@ -39,8 +39,11 @@ export function PlayingView({
     const stage1Progress = stage === "with-hint" ? (currentIndex / totalWords) * 100 : 100;
     const stage2Progress = stage === "recall" ? (currentIndex / totalWords) * 100 : 0;
 
-    // Shake animation/color trigger for mismatch or timeout
-    const isMismatch = isFinal && !isCorrect && transcript.trim().length > 0;
+    // isMismatch = є фінальний транскрипт, НІ матчу, НІ коректної відповіді.
+    // Важливо: isCorrect перевіряємо першим — якщо матч вже зафіксовано,
+    // ми НЕ показуємо помилку навіть якщо isFinal теж true.
+    // (React оновлює стан асинхронно, тому isCorrect може прийти чуть пізніше за isFinal)
+    const isMismatch = !isCorrect && isFinal && transcript.trim().length > 0;
     const showFeedbackError = isMismatch || isTimeout;
 
     return (
