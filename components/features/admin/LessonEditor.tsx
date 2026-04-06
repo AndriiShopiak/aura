@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Type, AlignLeft, Clock, Info, LayoutDashboard, Plus, Trash2, Image as ImageIcon, FileText, Upload, Loader2 } from "lucide-react";
+import { Sparkles, Type, AlignLeft, Clock, Info, LayoutDashboard, Plus, Trash2, Image as ImageIcon, FileText, Upload, Loader2, Wand2 } from "lucide-react";
 import { Word, Quest } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ImagePicker } from "@/components/ui/ImagePicker";
 interface LessonEditorProps {
     title: string;
     description: string;
@@ -38,6 +39,8 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     updateWord,
 }) => {
 
+    const [pickerIndex, setPickerIndex] = useState<number | null>(null);
+
     const handleImageUpload = (index: number, file: File) => {
         if (!file) return;
         const previewUrl = URL.createObjectURL(file);
@@ -46,6 +49,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     };
 
     return (
+        <>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Sidebar Configuration */}
             <section className="lg:col-span-1 space-y-8">
@@ -184,17 +188,25 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                                             <div className="space-y-3">
                                                 <div className="flex items-center justify-between h-6 pl-1">
                                                     <label className="text-[9px] uppercase font-black text-slate-400 tracking-[0.2em]">Optional Image</label>
-                                                    {word.imageUrl && (
+                                                    <div className="flex items-center gap-3">
                                                         <button
-                                                            onClick={() => {
-                                                                updateWord(i, "imageUrl", "");
-                                                                updateWord(i, "tempFile", undefined);
-                                                            }}
-                                                            className="text-[8px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-600 transition-colors"
+                                                            onClick={() => setPickerIndex(i)}
+                                                            className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-sky-500 hover:text-sky-700 transition-colors"
                                                         >
-                                                            Remove
+                                                            <Wand2 size={10} /> Search
                                                         </button>
-                                                    )}
+                                                        {word.imageUrl && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    updateWord(i, "imageUrl", "");
+                                                                    updateWord(i, "tempFile", undefined);
+                                                                }}
+                                                                className="text-[8px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-600 transition-colors"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 <div className="relative">
@@ -301,5 +313,21 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                 </div>
             </section>
         </div>
+
+        {/* Image Picker Modal */}
+        {pickerIndex !== null && (() => {
+            const idx = pickerIndex;
+            return (
+                <ImagePicker
+                    phrase={words[idx]?.word || words[idx]?.value || ""}
+                    onSelect={(url) => {
+                        updateWord(idx, "imageUrl", url);
+                        updateWord(idx, "tempFile", undefined);
+                    }}
+                    onClose={() => setPickerIndex(null)}
+                />
+            );
+        })()}
+        </>
     );
 };
